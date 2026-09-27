@@ -1,9 +1,10 @@
-v2rayA source: b3c8a0a490bd03a4b2107a3e5802028259d4b7af
-Fork main: 48fc14b5fe51dca76b52881e213d94691b3f729c (additional test-only fix)
+v2rayA source: 0f5101f285cddaedaf7e7f041c833bedb36de0a2
+OpenWrt integration source: 564fc811726ac7a7084a014dc41fe7f8c6c61cd2
 OpenWrt-only patch: tools/apply-resilient-defaults.py
-Version: 2.5.7-resilient.12
-Release: r19.resilient1
-Go: go1.26.8 windows/amd64 (cross-compiled linux/arm64)
+Version: 2.5.7-resilient.13
+Release: r20.resilient1
+Go: go1.26.8 windows/amd64 (cross-compiled linux/arm64, CGO_ENABLED=0)
+Service build: -buildvcs=false -trimpath -ldflags "-s -w -X github.com/v2rayA/v2rayA/conf.Version=2.5.7-resilient.13"
+Core build: -trimpath -ldflags "-s -w -X main.Version=2.5.7-resilient.13"
 Node: v24.19.0
-OpenWrt VM: 24.10.4 armsr/armv8
-OpenWrt integration source: 02a4ef3
+OpenWrt VM: one 24.10.4 armsr/armv8 VM, 256 MiB RAM
