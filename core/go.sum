@@ -115,10 +115,10 @@ github.com/vishvananda/netns v0.0.5 h1:DfiHV+j8bA32MFM7bfEunvT8IAqQ/NzSJHtcmW5zd
 github.com/vishvananda/netns v0.0.5/go.mod h1:SpkAiCQRtJ6TvvxPnOSyH3BMl6unz3xZlaprSwhNNJM=
 github.com/wlynxg/anet v0.0.5 h1:J3VJGi1gvo0JwZ/P1/Yc/8p63SoW98B5dHkYDmpgvvU=
 github.com/wlynxg/anet v0.0.5/go.mod h1:eay5PRQr7fIVAMbTbchTnO9gG65Hg/uYGdc7mguHxoA=
+github.com/wywywywycloud/Xray-core v1.260327.1-0.20260728075948-5ca6f4b7d4dc h1:Vr4A4gZQ6vHwxLGoyo01NI+Z1S+vL7gNmGyV9gl1hEM=
+github.com/wywywywycloud/Xray-core v1.260327.1-0.20260728075948-5ca6f4b7d4dc/go.mod h1:wukQoBGnQ6GaLTGuKwv8rCTgf80QxPj+6iznDZHQEWo=
 github.com/xtls/reality v0.0.0-20260322125925-9234c772ba8f h1:iy2JRioxmUpoJ3SzbFPyTxHZMbR/rSHP7dOOgYaq1O8=
 github.com/xtls/reality v0.0.0-20260322125925-9234c772ba8f/go.mod h1:DsJblcWDGt76+FVqBVwbwRhxyyNJsGV48gJLch0OOWI=
-github.com/xtls/xray-core v1.260327.1-0.20260728075948-5ca6f4b7d4dc h1:fkOkmgHWbF2Q8MdV9VxrsyxRz4OndcrUXUkh1ANBTg0=
-github.com/xtls/xray-core v1.260327.1-0.20260728075948-5ca6f4b7d4dc/go.mod h1:wukQoBGnQ6GaLTGuKwv8rCTgf80QxPj+6iznDZHQEWo=
 gitlab.com/yawning/chacha20.git v0.0.0-20230427033715-7877545b1b37 h1:ZrWBE3u/o9cHU2mySXf1687MaK09JOeZt1A+fHnCjmU=
 gitlab.com/yawning/chacha20.git v0.0.0-20230427033715-7877545b1b37/go.mod h1:3x6b94nWCP/a2XB/joOPMiGYUBvqbLfeY/BkHLeDs6s=
 go.opentelemetry.io/auto/sdk v1.2.1 h1:jXsnJ4Lmnqd11kwkBV2LgLoFMZKizbCi5fNZ/ipaZ64=
