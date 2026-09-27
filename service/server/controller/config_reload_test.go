@@ -149,7 +149,9 @@ func TestPutOutboundRestoresAfterReloadFailure(t *testing.T) {
 	previous := configure.OutboundSetting{
 		ProbeURL:      "https://previous.example/ping",
 		ProbeInterval: "30s",
-		Type:          configure.LeastPing,
+		// A worker-only policy edit intentionally avoids reloading the core.
+		// Change from round-robin so this test exercises the reload path.
+		Type: configure.RoundRobin,
 	}
 	if err := configure.SetOutboundSetting("proxy", previous); err != nil {
 		t.Fatal(err)
