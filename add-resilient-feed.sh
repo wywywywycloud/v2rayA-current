@@ -6,7 +6,7 @@ umask 077
 . /etc/openwrt_release
 case "$DISTRIB_RELEASE" in
     24.10.0|24.10.1|24.10.2|24.10.3|24.10.4|24.10.5|24.10.6|24.10.7|24.10.8) ;;
-    *) echo 'Validated for OpenWrt 24.10.0 through 24.10.8 only.' >&2; exit 1 ;;
+    *) echo 'This feed supports OpenWrt 24.10.0 through 24.10.8 only.' >&2; exit 1 ;;
 esac
 opkg print-architecture | awk '$2 == "aarch64_cortex-a53" {found=1} END {exit !found}' || {
     echo 'Requires aarch64_cortex-a53; do not override your router architecture.' >&2; exit 1;
