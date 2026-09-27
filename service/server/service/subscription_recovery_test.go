@@ -77,6 +77,11 @@ func resetSubscription(t *testing.T) *configure.SubscriptionRaw {
 	if err := configure.SetConfigure(cfg); err != nil {
 		t.Fatal(err)
 	}
+	setting := configure.DefaultOutboundSetting()
+	setting.Type = "test-native"
+	if err := configure.SetOutboundSetting("proxy", setting); err != nil {
+		t.Fatal(err)
+	}
 	if err := configure.AddConnect(configure.NodeRef{TYPE: configure.SubscriptionServerType, Sub: 0, ID: 1, Outbound: "proxy"}); err != nil {
 		t.Fatal(err)
 	}
@@ -308,6 +313,73 @@ func TestSubscriptionRecoveryFallbackKeepsTimeout(t *testing.T) {
 	cancel()
 	if _, _, err := fetchSubscriptionForAutomation(ctx, "http://subscription.invalid", true); !errors.Is(err, context.Canceled) || fallbackAttempts != 1 {
 		t.Fatalf("cancelled fetch retried: %v, attempts %d", err, fallbackAttempts)
+	}
+}
+
+func TestProbeRunsLatencyAndThroughputConcurrently(t *testing.T) {
+	started := make(chan string, 2)
+	release := make(chan struct{})
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		started <- r.URL.Path
+		<-release
+		if r.URL.Path == "/speed" {
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write(make([]byte, subscriptionSpeedProbeSize))
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	defer server.Close()
+
+	resultCh := make(chan subscriptionProbeResult, 1)
+	go func() {
+		resultCh <- probeHTTPWithClient(context.Background(), &http.Client{Timeout: 2 * time.Second}, server.URL+"/check", server.URL+"/speed")
+	}()
+	seen := map[string]bool{}
+	for range 2 {
+		select {
+		case path := <-started:
+			seen[path] = true
+		case <-time.After(time.Second):
+			t.Fatal("latency and speed requests did not start concurrently")
+		}
+	}
+	close(release)
+	result := <-resultCh
+	if result.err != nil || !result.speedMeasured || result.throughput < subscriptionMinSpeed {
+		t.Fatalf("concurrent probe = %+v", result)
+	}
+	if !seen["/check"] || !seen["/speed"] {
+		t.Fatalf("started requests = %+v", seen)
+	}
+}
+
+func TestProbeSpeedCalculation(t *testing.T) {
+	if got := probeSpeed(99*1024, time.Second); got >= subscriptionMinSpeed {
+		t.Fatalf("99 KiB/s = %d, want below threshold", got)
+	}
+	if got := probeSpeed(100*1024, time.Second); got != subscriptionMinSpeed {
+		t.Fatalf("100 KiB/s = %d, want %d", got, subscriptionMinSpeed)
+	}
+}
+
+func TestConfiguredURLDeterminesReachability(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/speed" || r.URL.Path == "/missing" {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	defer server.Close()
+	result := probeHTTPWithClient(context.Background(), server.Client(), server.URL+"/check", server.URL+"/speed")
+	if result.err != nil || result.speedMeasured {
+		t.Fatalf("reachable configured URL with unavailable speed sample = %+v", result)
+	}
+
+	result = probeHTTPWithClient(context.Background(), server.Client(), server.URL+"/missing", server.URL+"/check")
+	if result.err == nil {
+		t.Fatalf("failed configured URL reported reachable: %+v", result)
 	}
 }
 
