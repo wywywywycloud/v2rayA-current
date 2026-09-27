@@ -1,8 +1,8 @@
-v2rayA source: 7d9fcfca05070226066f7f7d16e67aa99c08c3aa
-OpenWrt integration source: b8eb734
-OpenWrt-only patch: tools/apply-resilient-defaults.py in the integration source
-Version: 2.5.7-resilient.11
-Release: r18.resilient1
-Go: go version go1.26.8 windows/amd64 (cross-compiled linux/arm64)
+v2rayA source: b3c8a0a490bd03a4b2107a3e5802028259d4b7af
+Fork main: 48fc14b5fe51dca76b52881e213d94691b3f729c (additional test-only fix)
+OpenWrt-only patch: tools/apply-resilient-defaults.py
+Version: 2.5.7-resilient.12
+Release: r19.resilient1
+Go: go1.26.8 windows/amd64 (cross-compiled linux/arm64)
 Node: v24.19.0
 OpenWrt VM: 24.10.4 armsr/armv8
