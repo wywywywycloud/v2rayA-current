@@ -6,7 +6,7 @@ Validated on 2026-09-27 before publication. The previous release report is
 ## Inputs
 
 - Application/core source: `1d1dd1d7c645192238da1279b49f42b62979826b`.
-- Packaging and VM pipeline: `d37b9b30ea2ce1cc797eb1452336475060f335fe`.
+- Packaging and VM pipeline: `d7b816d191a5566dbc6f7808449f5d76e4c71fd3`.
 - Service/core package: `2.5.7-resilient.8-r14.resilient1`.
 - LuCI package: `26.268.0-r14.resilient1`.
 - Package architecture: `aarch64_cortex-a53`.
@@ -47,10 +47,11 @@ __RESILIENT_SUBSCRIPTION_REORDER_NO_DROP_OK__
 
 The checks make repeated HTTP requests through the proxy, verify the selected
 fixture, confirm keep-current failover and retention, and compare the main
-core PID across membership refresh and subscription reordering. The round-robin
-test confirms both healthy fixtures serve traffic. Throughput threshold and
-fallback behavior are covered by Go tests; the local SOCKS fixtures do not
-simulate bandwidth. This finite VM test cannot guarantee uninterrupted
+core PID across membership refresh and subscription reordering. The random
+test checks that repeated requests keep using the same healthy fixture; the
+round-robin test confirms both healthy fixtures serve traffic. Throughput
+threshold and fallback behavior are covered by Go tests; the local SOCKS
+fixtures do not simulate bandwidth. This finite VM test cannot guarantee uninterrupted
 connectivity on every physical network.
 
 ## Signed feed and upgrade helper
