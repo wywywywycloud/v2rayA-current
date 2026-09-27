@@ -1,63 +1,60 @@
-# Resilient r11 validation
+# Resilient r13 validation
 
 Validated on 2026-09-27 before publication.
 
 ## Inputs
 
-- Application/core commit: `23c5259bace38fc806c6b9a790f1fe0e6c9a8d1f`.
-- Packaging commit: `c0fde21b86908c3f6ee3529e5b0168bd829b11f1`.
-- Service/core version: `2.5.7-resilient.5-r11.resilient1`.
-- LuCI version: `26.268.0-r11.resilient1`.
+- Application/core commit: `0de21b1b86d9609145e429d2772219d69c1502e6`.
+- Packaging commit: `7ee2123614c167646b12761d512508255327ebe5`.
+- Service/core version: `2.5.7-resilient.7-r13.resilient1`.
+- LuCI version: `26.268.0-r13.resilient1`.
 - Target package architecture: `aarch64_cortex-a53`.
 
-The service and matching core were cross-compiled as static Linux ARM64
-binaries after a production GUI build. The package index records exact SHA-256
-digests for all three IPKs.
+The production GUI build passed all 222 unit tests, TypeScript checking, the
+six-locale key check and ESLint without errors. Targeted Go tests cover fixed
+selection, automatic handoff, URL/throughput eligibility and group strategies.
+The application and matching core were cross-compiled as static Linux ARM64
+binaries. `SHA256SUMS` records exact digests for all three IPKs and their index.
+
+The dashboard was exercised in a browser with 12 mock members. The run checked
+automatic labels and wrapping, selection of a concrete member, the pin marker,
+the automatic transition to **Do not switch**, disabled automatic controls and
+the card-level group settings button.
 
 ## OpenWrt 24.10.4 ARM64 VM
 
 The package pipeline booted the official
 `openwrt-24.10.4-armsr-armv8-generic-ext4-combined-efi.img.gz` image in QEMU.
-The downloaded image matched OpenWrt's published SHA-256
+The image matched OpenWrt's published SHA-256
 `2129ab59e79dff64537779f24befbc6bee241b72998b9ea434a1166f317dc30c`.
 
 The clean VM accepted signed official package lists, installed release-native
-`kmod-nft-tproxy`, geodata and all three r11 packages, then reported:
+`kmod-nft-tproxy`, geodata and all three r13 packages, then checked:
 
 ```text
-v2raya-resilient             2.5.7-resilient.5-r11.resilient1
-v2raya-resilient-core        2.5.7-resilient.5-r11.resilient1
-luci-app-v2raya-resilient    26.268.0-r11.resilient1
-v2rayA                       2.5.7-resilient.5
-V2RAYA_CORE                  2.5.7-resilient.5 (based on xray-core 26.7.28)
+v2raya-resilient             2.5.7-resilient.7-r13.resilient1
+v2raya-resilient-core        2.5.7-resilient.7-r13.resilient1
+luci-app-v2raya-resilient    26.268.0-r13.resilient1
+v2rayA                       2.5.7-resilient.7
+V2RAYA_CORE                  2.5.7-resilient.7
 ```
 
 The service started, the embedded GUI returned its HTML, the LuCI page was
-present and `/api/version` returned `serviceValid: true`,
-`coreVersionValid: true`, version `2.5.7-resilient.5` for both components and
-variant `V2rayaCore`.
+present and `/api/version` returned matching service/core versions with
+`coreVersionValid: true`.
 
 The generic image's root partition is too small for both static Go binaries,
 so the test attaches a temporary 512 MiB `/usr` disk. It also adds a test-only
 `aarch64_cortex-a53` opkg architecture entry; the VM itself is
 `aarch64_generic`. Neither adjustment is part of a physical-router install.
 
-The VM run exposed and prevented two Windows-host packaging defects before
-publication: CRLF in the init script and backslash directory names in the LuCI
-tar archive. The published IPKs contain LF shell files and POSIX archive paths.
-
 ## Signed feed
 
-`Packages` was signed and verified with OpenWrt `usign` inside an OpenWrt
-24.10.4 VM. Resilient r11 uses public-key fingerprint `9478c50315c92021` and
-public-key SHA-256
+`Packages` is signed with OpenWrt `usign` and verified before publication.
+The feed key fingerprint is `9478c50315c92021`; its public-key SHA-256 is
 `7a5f9426bdbacd25d1e89ad7e5e65579b2c33bcd278b0489772f3ab017df8787`.
-The private key is not present in the repository.
+The private key is never committed to the repository.
 
-This r11 key differs from the previous Resilient feed key. Existing
-installations must run `add-resilient-feed.sh` once before updating package
-lists. The script validates the new public key and index signature before
-installing the key; it does not change v2rayA packages or settings.
-
-The reproducible ARM64 test entry point is
-`tools/test-openwrt-24.10.4-arm64.ps1` on the packaging branch.
+The reproducible VM entry point is
+`tools/test-openwrt-24.10.4-arm64.ps1` on the packaging branch. Its serial log
+contains all r13 package, binary, service, GUI and API success markers.
