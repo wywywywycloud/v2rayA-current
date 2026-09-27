@@ -6,3 +6,4 @@ Release: r19.resilient1
 Go: go1.26.8 windows/amd64 (cross-compiled linux/arm64)
 Node: v24.19.0
 OpenWrt VM: 24.10.4 armsr/armv8
+OpenWrt integration source: 02a4ef3
