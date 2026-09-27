@@ -116,7 +116,6 @@ export type OutboundStrategy =
   | "keepcurrent"
   | "roundrobin"
   | "random"
-  | "firstavailable"
   | "fixed";
 export interface OutboundSetting {
   autoAdd?: boolean;

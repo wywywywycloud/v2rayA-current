@@ -267,7 +267,7 @@ func TestWorkerPolicyChangesKeepTheSelectedServer(t *testing.T) {
 	t.Cleanup(func() { _ = configure.SetOutboundSetting("proxy", previous) })
 	current := configure.NodeFingerprint("socks5://selected.example:1080")
 	for _, nextType := range []configure.ObservatoryType{
-		configure.Random, configure.FirstAvailable, configure.KeepCurrent,
+		configure.Random, configure.LeastPing, configure.KeepCurrent,
 	} {
 		setting := configure.DefaultOutboundSetting()
 		setting.Type = configure.LeastPing

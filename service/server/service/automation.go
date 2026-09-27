@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net/url"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -20,14 +21,7 @@ var (
 	automationCancelMu sync.Mutex
 	automationCancel   context.CancelFunc
 	automationWake     = make(chan struct{}, 1)
-	automationRefresh  = make(chan groupRefreshRequest)
 )
-
-type groupRefreshRequest struct {
-	name string
-	ctx  context.Context
-	done chan error
-}
 
 func CancelAutomation() {
 	automationCancelMu.Lock()
@@ -44,43 +38,9 @@ func NotifyAutomation() {
 	}
 }
 
-// RefreshAutomaticGroups asks the single automation worker to probe automatic
-// group membership immediately. An empty name refreshes every automatic group.
-// Waiting for that worker keeps scheduled and user-requested passes serialized.
+// RefreshAutomaticGroups only synchronizes membership. Selection is scheduled separately.
 func RefreshAutomaticGroups(ctx context.Context, name string) error {
-	ConfigurationMu.Lock()
-	hasAutomatic := false
-	found := name == ""
-	for _, outbound := range configure.GetOutbounds() {
-		if !configure.GetOutboundSetting(outbound).AutoAdd {
-			continue
-		}
-		hasAutomatic = true
-		if name == outbound {
-			found = true
-			break
-		}
-	}
-	ConfigurationMu.Unlock()
-	if !found {
-		return fmt.Errorf("group %q does not manage its membership automatically", name)
-	}
-	if !hasAutomatic {
-		return nil
-	}
-
-	request := groupRefreshRequest{name: name, ctx: ctx, done: make(chan error, 1)}
-	select {
-	case automationRefresh <- request:
-	case <-ctx.Done():
-		return ctx.Err()
-	}
-	select {
-	case err := <-request.done:
-		return err
-	case <-ctx.Done():
-		return ctx.Err()
-	}
+	return newAutomation().forceGroups(ctx, name)
 }
 
 type subscriptionSchedule struct {
@@ -90,10 +50,8 @@ type subscriptionSchedule struct {
 }
 
 type groupSchedule struct {
-	signature       string
-	next            time.Time
-	slowCurrent     string
-	slowCurrentRuns int
+	signature string
+	next      time.Time
 }
 
 type groupCandidate struct {
@@ -109,6 +67,7 @@ type automation struct {
 	groups        map[string]*groupSchedule
 	now           func() time.Time
 	probe         func(context.Context, []serverObj.ServerObj, string) []subscriptionProbeResult
+	ping          func(context.Context, []serverObj.ServerObj) []subscriptionProbeResult
 	fetch         subscriptionFetcher
 	applyGroup    func(string, []configure.NodeRef) error
 	applyMembers  func(string, []configure.NodeRef) error
@@ -123,6 +82,7 @@ func newAutomation() *automation {
 		groups:        map[string]*groupSchedule{},
 		now:           time.Now,
 		probe:         probeSubscriptionWithContext,
+		ping:          pingGroupCandidates,
 		fetch:         fetchSubscriptionForAutomation,
 		applyGroup:    replaceManagedOutboundConnections,
 		applyMembers:  writeGroupMembers,
@@ -191,7 +151,7 @@ func ValidateOutboundSetting(setting configure.OutboundSetting) error {
 		return fmt.Errorf("probe interval must be between 1 second and 365 days")
 	}
 	switch setting.Type {
-	case configure.LeastPing, configure.KeepCurrent, configure.RoundRobin, configure.Random, configure.FirstAvailable:
+	case configure.LeastPing, configure.KeepCurrent, configure.RoundRobin, configure.Random:
 	case configure.Fixed:
 		if setting.Selected == "" {
 			return fmt.Errorf("fixed group requires a selected server")
@@ -293,8 +253,19 @@ func (a *automation) subscriptionUnavailable(ctx context.Context, sub *configure
 		}
 	}
 	state.warnedUnprobeable = false
-	results := a.probe(ctx, nodes, probeURL)
-	return !anyHealthy(results), ctx.Err()
+	for _, node := range nodes {
+		if ctx.Err() != nil {
+			return false, ctx.Err()
+		}
+		results := a.probe(ctx, []serverObj.ServerObj{node}, probeURL)
+		if len(results) != 1 {
+			return false, fmt.Errorf("incomplete subscription check")
+		}
+		if results[0].err == nil {
+			return false, nil
+		}
+	}
+	return true, ctx.Err()
 }
 
 func (a *automation) process(ctx context.Context, sub *configure.SubscriptionRaw, probeURL string) error {
@@ -487,113 +458,116 @@ func sameMembers(current []*configure.NodeRef, desired []configure.NodeRef) bool
 	return true
 }
 
-const randomLatencyStep = 250 * time.Millisecond
-
-// eligibleProbeResults prefers every reachable node that meets the minimum
-// throughput. If none meet it, the single fastest reachable node remains as a
-// fallback so a slow connection is still better than a disconnected group.
 func eligibleProbeResults(results []subscriptionProbeResult) []bool {
 	eligible := make([]bool, len(results))
-	fastCount := 0
-	fastest := -1
 	for i, result := range results {
-		if result.err != nil {
-			continue
-		}
-		if fastest < 0 || result.throughput > results[fastest].throughput {
-			fastest = i
-		}
-		if !result.speedMeasured || result.throughput >= subscriptionMinSpeed {
-			eligible[i] = true
-			fastCount++
-		}
-	}
-	if fastCount == 0 && fastest >= 0 {
-		eligible[fastest] = true
+		eligible[i] = result.err == nil && result.speedMeasured && result.throughput >= subscriptionMinSpeed
 	}
 	return eligible
 }
 
-func selectedGroupCandidate(strategy configure.ObservatoryType, current string, candidates []groupCandidate, results []subscriptionProbeResult, choose func(int) int) string {
-	usable := eligibleProbeResults(results)
-	if (strategy == configure.KeepCurrent || strategy == configure.Random) && current != "" {
-		for i, candidate := range candidates {
-			if i < len(usable) && usable[i] && candidate.node != nil && configure.NodeFingerprint(candidate.node.ExportToURL()) == current {
-				return current
+// Probe only as far as the strategy needs. TCP ordering does not start a core.
+func (a *automation) selectGroup(ctx context.Context, setting configure.OutboundSetting, candidates []groupCandidate, probe func([]serverObj.ServerObj, string) ([]subscriptionProbeResult, error)) ([]subscriptionProbeResult, error) {
+	results := make([]subscriptionProbeResult, len(candidates))
+	nodes := make([]serverObj.ServerObj, len(candidates))
+	for i := range candidates {
+		nodes[i] = candidates[i].node
+		results[i].err = fmt.Errorf("not selected")
+	}
+	checked := make(map[int]bool)
+	check := func(i int) (bool, error) {
+		if ctx.Err() != nil {
+			return false, ctx.Err()
+		}
+		checked[i] = true
+		one, err := probe([]serverObj.ServerObj{nodes[i]}, setting.ProbeURL)
+		if err != nil {
+			return false, err
+		}
+		if len(one) != 1 {
+			return false, fmt.Errorf("incomplete candidate check")
+		}
+		results[i] = one[0]
+		return eligibleProbeResults(one)[0], nil
+	}
+	if setting.Type == configure.KeepCurrent {
+		for i, node := range nodes {
+			if node != nil && configure.NodeFingerprint(node.ExportToURL()) == setting.StickyCurrent {
+				ok, err := check(i)
+				if err != nil || ok {
+					return results, err
+				}
+				break
 			}
 		}
 	}
-	eligible := make([]int, 0, len(candidates))
-	bestBucket := int64(-1)
-	for i, candidate := range candidates {
-		if i >= len(results) || !usable[i] || candidate.node == nil {
-			continue
-		}
-		if strategy == configure.LeastPing {
-			if len(eligible) == 0 || results[i].latency < results[eligible[0]].latency {
-				eligible = []int{i}
-			}
-			continue
-		}
-		if strategy == configure.FirstAvailable || strategy == configure.KeepCurrent {
-			return configure.NodeFingerprint(candidate.node.ExportToURL())
-		}
-		bucket := int64(results[i].latency / randomLatencyStep)
-		if bestBucket < 0 || bucket < bestBucket {
-			bestBucket = bucket
-			eligible = eligible[:0]
-		}
-		if bucket == bestBucket {
-			eligible = append(eligible, i)
+	pings := a.ping(ctx, nodes)
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
+	}
+	if len(pings) != len(nodes) {
+		return nil, fmt.Errorf("incomplete TCP ping results")
+	}
+	order := make([]int, 0, len(nodes))
+	for i := range nodes {
+		if nodes[i] != nil && !checked[i] && (pings[i].err == nil || udpOnlyCandidate(nodes[i])) {
+			order = append(order, i)
 		}
 	}
-	if len(eligible) == 0 {
-		return ""
+	sort.SliceStable(order, func(i, j int) bool { return pings[order[i]].latency < pings[order[j]].latency })
+	if setting.Type == configure.Random {
+		for i := len(order) - 1; i > 0; i-- {
+			j := a.choose(i + 1)
+			order[i], order[j] = order[j], order[i]
+		}
 	}
-	if strategy == configure.LeastPing {
-		return configure.NodeFingerprint(candidates[eligible[0]].node.ExportToURL())
-	}
-	index := eligible[choose(len(eligible))]
-	return configure.NodeFingerprint(candidates[index].node.ExportToURL())
-}
-
-// A single throughput sample can be slow because the speed-test host or the
-// path to it is congested while the configured health URL still works. Give a
-// healthy retained node one more scheduled check before treating measured
-// low speed as failure. A failed health URL still causes immediate failover.
-func keepSelectedThroughOneSlowProbe(state *groupSchedule, setting configure.OutboundSetting, candidates []groupCandidate, results []subscriptionProbeResult) {
-	if (setting.Type != configure.KeepCurrent && setting.Type != configure.Random) || setting.StickyCurrent == "" {
-		state.slowCurrent, state.slowCurrentRuns = "", 0
-		return
-	}
-	current := -1
-	for i, candidate := range candidates {
-		if candidate.node != nil && configure.NodeFingerprint(candidate.node.ExportToURL()) == setting.StickyCurrent {
-			current = i
+	for _, i := range order {
+		ok, err := check(i)
+		if err != nil {
+			return results, err
+		}
+		if ok && setting.Type != configure.RoundRobin {
 			break
 		}
 	}
-	if current < 0 || current >= len(results) || results[current].err != nil {
-		state.slowCurrent, state.slowCurrentRuns = "", 0
-		return
+	return results, nil
+}
+
+func selectedGroupCandidate(candidates []groupCandidate, results []subscriptionProbeResult) string {
+	for i, ok := range eligibleProbeResults(results) {
+		if ok && candidates[i].node != nil {
+			return configure.NodeFingerprint(candidates[i].node.ExportToURL())
+		}
 	}
-	if eligibleProbeResults(results)[current] {
-		state.slowCurrent, state.slowCurrentRuns = "", 0
-		return
+	return ""
+}
+
+func (a *automation) syncGroupMembers(name string, candidates []groupCandidate) error {
+	members := make([]configure.NodeRef, len(candidates))
+	for i := range candidates {
+		members[i] = candidates[i].ref
+		members[i].Outbound = name
 	}
-	if state.slowCurrent == setting.StickyCurrent {
-		state.slowCurrentRuns++
-	} else {
-		state.slowCurrent, state.slowCurrentRuns = setting.StickyCurrent, 1
+	if sameMembers(configure.GetConnectedServersByOutbound(name).Get(), members) {
+		return nil
 	}
-	if state.slowCurrentRuns == 1 {
-		// Keep this member in automatic membership as well as the selected
-		// route during the confirmation pass.
-		results[current].speedMeasured = false
+	if err := a.applyMembers(name, members); err != nil {
+		return err
 	}
+	v2ray.ApiFeed.ProductMessage("catalog_changed", nil)
+	return nil
 }
 
 func (a *automation) processGroup(ctx context.Context, name string, setting configure.OutboundSetting, candidates []groupCandidate, probe func([]serverObj.ServerObj, string) ([]subscriptionProbeResult, error)) {
+	if setting.AutoAdd {
+		ConfigurationMu.Lock()
+		err := a.syncGroupMembers(name, candidates)
+		ConfigurationMu.Unlock()
+		if err != nil {
+			a.groupErrors[name] = err
+			return
+		}
+	}
 	signature := automaticGroupSignature(setting, candidates)
 	state := a.groups[name]
 	now := a.now()
@@ -611,13 +585,8 @@ func (a *automation) processGroup(ctx context.Context, name string, setting conf
 	backoff := max(interval, 30*time.Second)
 	state.signature = signature
 
-	nodes := make([]serverObj.ServerObj, len(candidates))
-	for i := range candidates {
-		nodes[i] = candidates[i].node
-	}
-	results, err := probe(nodes, setting.ProbeURL)
+	results, err := a.selectGroup(ctx, setting, candidates, probe)
 	if err == nil {
-		keepSelectedThroughOneSlowProbe(state, setting, candidates, results)
 		usable := eligibleProbeResults(results)
 		members := make([]configure.NodeRef, 0, len(candidates))
 		eligibleFingerprints := make([]string, 0, len(candidates))
@@ -646,7 +615,7 @@ func (a *automation) processGroup(ctx context.Context, name string, setting conf
 				nextSetting := currentSetting
 				stickyChanged := false
 				if configure.UsesWorkerSelection(currentSetting.Type) && currentSetting.Selected == "" {
-					nextCurrent := selectedGroupCandidate(currentSetting.Type, currentSetting.StickyCurrent, candidates, results, a.choose)
+					nextCurrent := selectedGroupCandidate(candidates, results)
 					stickyChanged = nextCurrent != currentSetting.StickyCurrent
 					nextSetting.StickyCurrent = nextCurrent
 				}
@@ -656,27 +625,13 @@ func (a *automation) processGroup(ctx context.Context, name string, setting conf
 				eligibleMembers := strings.Join(eligibleFingerprints, " ")
 				eligibleChanged := currentSetting.EligibleMembers != eligibleMembers
 				nextSetting.EligibleMembers = eligibleMembers
-				membershipChanged := currentSetting.AutoAdd && !sameMembers(configure.GetConnectedServersByOutbound(name).Get(), members)
 				switch {
-				case stickyChanged || (eligibleChanged && currentSetting.Type == configure.RoundRobin && !currentSetting.AutoAdd):
-					err = a.applyState(name, nextSetting, members, currentSetting.AutoAdd)
-				case membershipChanged && configure.UsesWorkerSelection(currentSetting.Type):
-					// The running core contains only the worker-selected node. If
-					// that choice is unchanged, the other members affect the next
-					// probe, not the current routing config.
-					err = a.applyMembers(name, members)
-					if err == nil && eligibleChanged {
-						err = configure.SetOutboundSetting(name, nextSetting)
-					}
-				case membershipChanged:
-					err = a.applyGroup(name, members)
-					if err == nil && eligibleChanged {
-						err = configure.SetOutboundSetting(name, nextSetting)
-					}
+				case stickyChanged || (eligibleChanged && currentSetting.Type == configure.RoundRobin):
+					err = a.applyState(name, nextSetting, nil, false)
 				case eligibleChanged:
 					err = configure.SetOutboundSetting(name, nextSetting)
 				}
-				if err == nil && (stickyChanged || eligibleChanged || membershipChanged) {
+				if err == nil && (stickyChanged || eligibleChanged) {
 					log.Info("[Groups] %s: %d/%d candidates available", name, len(members), len(candidates))
 					v2ray.ApiFeed.ProductMessage("catalog_changed", nil)
 				}
@@ -696,61 +651,25 @@ func (a *automation) processGroup(ctx context.Context, name string, setting conf
 	state.next = a.now().Add(interval)
 }
 
-func (a *automation) forceGroups(parent context.Context, name string) error {
-	ctx, cancel := context.WithCancel(parent)
-	automationCancelMu.Lock()
-	automationCancel = cancel
-	automationCancelMu.Unlock()
-	defer func() {
-		cancel()
-		automationCancelMu.Lock()
-		automationCancel = nil
-		automationCancelMu.Unlock()
-	}()
-
+func (a *automation) forceGroups(ctx context.Context, name string) error {
 	ConfigurationMu.Lock()
-	forced := make([]string, 0)
-	settings := make(map[string]configure.OutboundSetting)
+	defer ConfigurationMu.Unlock()
+	found := name == ""
+	candidates := automaticGroupCandidates()
 	for _, outbound := range configure.GetOutbounds() {
-		setting := configure.GetOutboundSetting(outbound)
-		if !setting.AutoAdd || (name != "" && outbound != name) {
+		if !configure.GetOutboundSetting(outbound).AutoAdd || (name != "" && name != outbound) {
 			continue
 		}
-		forced = append(forced, outbound)
-		settings[outbound] = setting
-		if state := a.groups[outbound]; state != nil {
-			state.next = time.Time{}
+		found = true
+		if ctx.Err() != nil {
+			return ctx.Err()
 		}
-	}
-	candidates := automaticGroupCandidates()
-	ConfigurationMu.Unlock()
-	if name != "" && len(forced) == 0 {
-		return fmt.Errorf("group %q does not manage its membership automatically", name)
-	}
-	// A button press is a group operation. Running the full automation step
-	// here also downloads due subscriptions and probes unrelated groups before
-	// answering the request, leaving the UI busy for many minutes.
-	for _, outbound := range forced {
-		if err := ValidateOutboundSetting(settings[outbound]); err != nil {
+		if err := a.syncGroupMembers(outbound, candidates); err != nil {
 			return err
 		}
-		probe := func(nodes []serverObj.ServerObj, probeURL string) ([]subscriptionProbeResult, error) {
-			results := a.probe(ctx, cloneProbeNodes(nodes), probeURL)
-			if err := ctx.Err(); err != nil {
-				return nil, err
-			}
-			if len(results) != len(nodes) {
-				return nil, fmt.Errorf("incomplete reachability results")
-			}
-			return results, nil
-		}
-		a.processGroup(ctx, outbound, settings[outbound], candidates, probe)
-		if err := ctx.Err(); err != nil {
-			return err
-		}
-		if err := a.groupErrors[outbound]; err != nil {
-			return fmt.Errorf("refresh group %q: %w", outbound, err)
-		}
+	}
+	if !found {
+		return fmt.Errorf("group %q does not manage membership automatically", name)
 	}
 	return nil
 }
@@ -904,11 +823,6 @@ func StartAutomation() func() {
 				if timer != nil {
 					timer.Stop()
 				}
-			case request := <-automationRefresh:
-				if timer != nil {
-					timer.Stop()
-				}
-				request.done <- worker.forceGroups(request.ctx, request.name)
 			case <-timerC:
 			}
 		}
