@@ -1,0 +1,3 @@
+*.sh text eol=lf
+openwrt-24.10/**/Packages -text
+openwrt-24.10/**/Packages.sig -text
