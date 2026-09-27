@@ -1,6 +1,6 @@
 # v2rayA Resilient
 
-For OpenWrt 24.10.4, use the [Resilient signed feed and GUI installation guide](openwrt-24.10/resilient/README.md).
+For OpenWrt 24.10.0–24.10.8 on `aarch64_cortex-a53`, use the [Resilient signed feed and GUI installation guide](openwrt-24.10/resilient/README.md).
 Install `luci-app-v2raya-resilient` in LuCI Software.
 
 ---
