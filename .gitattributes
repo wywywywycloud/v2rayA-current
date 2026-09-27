@@ -1,3 +1,5 @@
 *.sh text eol=lf
 openwrt-24.10/**/Packages -text
 openwrt-24.10/**/Packages.sig -text
+openwrt-24.10/**/BUILD.txt text eol=lf
+openwrt-24.10/**/SHA256SUMS text eol=lf
