@@ -1,30 +1,27 @@
-# Resilient r15 validation
+# Resilient r14 validation
 
 Validated on 2026-09-27 before publication. The previous release report is
-[VALIDATION-r14.md](VALIDATION-r14.md).
+[VALIDATION-r13.md](VALIDATION-r13.md).
 
 ## Inputs
 
-- Application/core source: `deeb7b41a266eb6a47d1ed7110f104fbb07a674a`.
-- Packaging and VM pipeline: `fcf82a06afd15b22a852cafb9e671383fb63d964`.
-- Service/core package: `2.5.7-resilient.9-r15.resilient1`.
-- LuCI package: `26.268.0-r15.resilient1`.
+- Application/core source: `1d1dd1d7c645192238da1279b49f42b62979826b`.
+- Packaging and VM pipeline: `d7b816d191a5566dbc6f7808449f5d76e4c71fd3`.
+- Service/core package: `2.5.7-resilient.8-r14.resilient1`.
+- LuCI package: `26.268.0-r14.resilient1`.
 - Package architecture: `aarch64_cortex-a53`.
 
 The embedded GUI passed 223 unit tests across 45 files, TypeScript checking,
-the six-locale key check and the production Vite build. ESLint reported zero
-errors; the Windows checkout has pre-existing CRLF formatting warnings. The
-new Go controller tests confirm that a cached automatic group does not hold
-up manual start and that an empty group is checked before its first start.
-Service and core builds and vet passed. The full Go test suite does not pass
-on Windows because some tests invoke Unix commands or executable fixtures;
-the targeted controller tests passed and the ARM64 binaries were exercised in
-Linux.
+the six-locale key check and the production Vite build. Go tests for the group
+controller, worker, configuration and generated core template passed. Four
+controller tests and four core lifecycle tests use Linux executable fixtures
+that cannot run on the Windows build host; the applicable tests were run with
+those fixtures excluded. The real ARM64 binaries were then exercised in Linux.
 
 ## OpenWrt 24.10.4 VM
 
 The pipeline booted the official `armsr/armv8` OpenWrt 24.10.4 EFI image in
-QEMU, installed release-native dependencies and all three r15 IPKs, and
+QEMU, installed release-native dependencies and all three r14 IPKs, and
 confirmed the installed package versions, matching service/core binary
 versions, LuCI files, embedded GUI and `/api/version` with
 `coreVersionValid: true`.
@@ -46,16 +43,13 @@ __RESILIENT_FIRST_AVAILABLE_TRAFFIC_OK__
 __RESILIENT_RANDOM_TRAFFIC_OK__
 __RESILIENT_ROUND_ROBIN_TRAFFIC_OK__
 __RESILIENT_SUBSCRIPTION_REORDER_NO_DROP_OK__
-__RESILIENT_MANUAL_START_WITH_CACHED_GROUP_OK__
 ```
 
 The checks make repeated HTTP requests through the proxy, verify the selected
 fixture, confirm keep-current failover and retention, and compare the main
 core PID across membership refresh and subscription reordering. The random
 test checks that repeated requests keep using the same healthy fixture; the
-round-robin test confirms both healthy fixtures serve traffic. The manual
-start test stops and restarts the core with cached automatic group members,
-then confirms the saved route carries traffic. Throughput
+round-robin test confirms both healthy fixtures serve traffic. Throughput
 threshold and fallback behavior are covered by Go tests; the local SOCKS
 fixtures do not simulate bandwidth. This finite VM test cannot guarantee uninterrupted
 connectivity on every physical network.
@@ -67,7 +61,7 @@ The VM then fetched `Packages.gz` and `Packages.sig` over its test feed;
 `opkg update` reported `Signature check passed`. The staged upgrade helper
 downloaded all three matching packages, checked SHA-256 digests and versions,
 and completed successfully against that signed feed. The helper was exercised
-with r15 already installed; its r14-to-r15 migration path was not run on a
+with r14 already installed; its r13-to-r14 migration path was not run on a
 physical router.
 
 The feed key fingerprint is `9478c50315c92021` and the public-key SHA-256 is
