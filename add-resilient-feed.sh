@@ -12,9 +12,9 @@ opkg print-architecture | awk '$2 == "aarch64_cortex-a53" {found=1} END {exit !f
     echo 'Requires aarch64_cortex-a53; do not override your router architecture.' >&2; exit 1;
 }
 feed_url='https://raw.githubusercontent.com/wywywywycloud/v2rayA-current/openwrt-feed/openwrt-24.10/resilient/aarch64_cortex-a53'
-key_url='https://raw.githubusercontent.com/wywywywycloud/v2rayA-current/openwrt-feed/key.pub'
-key_sha256='6ef5500355caf6da06e020818151ee1a6533336387450b7ac28dcaba5540d979'
-key_id='9f02e659f24749fa'
+key_url='https://raw.githubusercontent.com/wywywycloud/v2rayA-current/openwrt-feed/resilient-key.pub'
+key_sha256='7a5f9426bdbacd25d1e89ad7e5e65579b2c33bcd278b0489772f3ab017df8787'
+key_id='9478c50315c92021'
 work_dir=$(mktemp -d /tmp/v2raya-resilient.XXXXXX)
 trap 'rm -rf "$work_dir"' EXIT
 trap 'exit 1' HUP INT TERM

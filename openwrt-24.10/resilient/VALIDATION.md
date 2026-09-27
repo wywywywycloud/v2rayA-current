@@ -1,119 +1,63 @@
-# Resilient r10 validation
+# Resilient r11 validation
 
-Validated on 2026-09-25 across all nine final OpenWrt 24.10 releases in
-disposable local armsr/armv8 VMs with 256 MiB RAM. No production subscriptions
-were used. Full functional suites ran on 24.10.4 and 24.10.5; every other
-release repeated the clean signed-feed, native kernel-module, service/core,
-embedded-GUI and LuCI checks.
+Validated on 2026-09-27 before publication.
 
-Application source: `a0bad190fc7aad17b916c03fbc849a376b7f188f`.
-Packaging source: `bd94f47861e3400e7a076a3fad2f7607ada366aa`.
-Service/core: `2.5.7-resilient.4-r10.resilient1`.
-LuCI: `26.268.0-r10.resilient1`.
+## Inputs
 
-## OpenWrt 24.10 release matrix
+- Application/core commit: `23c5259bace38fc806c6b9a790f1fe0e6c9a8d1f`.
+- Packaging commit: `c0fde21b86908c3f6ee3529e5b0168bd829b11f1`.
+- Service/core version: `2.5.7-resilient.5-r11.resilient1`.
+- LuCI version: `26.268.0-r11.resilient1`.
+- Target package architecture: `aarch64_cortex-a53`.
 
-Each row used the official release root filesystem and kernel. The VM target is
-generic ARM64, so it uses a test-only `aarch64_cortex-a53` opkg alias for the
-fork packages. Every kernel module came from that release's official repository.
+The service and matching core were cross-compiled as static Linux ARM64
+binaries after a production GUI build. The package index records exact SHA-256
+digests for all three IPKs.
 
-| OpenWrt | Linux | Signed feed | Native tproxy kmod | Service/core | Embedded GUI | LuCI |
-| --- | --- | --- | --- | --- | --- | --- |
-| 24.10.0 | 6.6.73 | PASS | PASS | PASS | PASS | PASS |
-| 24.10.1 | 6.6.86 | PASS | PASS | PASS | PASS | PASS |
-| 24.10.2 | 6.6.93 | PASS | PASS | PASS | PASS | PASS |
-| 24.10.3 | 6.6.104 | PASS | PASS | PASS | PASS | PASS |
-| 24.10.4 | 6.6.110 | PASS | PASS | PASS | PASS | PASS |
-| 24.10.5 | 6.6.119 | PASS | PASS | PASS | PASS | PASS |
-| 24.10.6 | 6.6.127 | PASS | PASS | PASS | PASS | PASS |
-| 24.10.7 | 6.6.141 | PASS | PASS | PASS | PASS | PASS |
-| 24.10.8 | 6.6.144 | PASS | PASS | PASS | PASS | PASS |
+## OpenWrt 24.10.4 ARM64 VM
 
-The public setup script accepts exactly 24.10.0 through 24.10.8. It rejects
-other releases instead of bypassing package-manager, ABI or architecture checks.
-Older rows establish compatibility only; production routers should use the
-newest 24.10 security update available for their hardware.
-OpenWrt 25.12 was not tested or claimed: it uses apk/APK and needs a separate
-native distribution. End-of-life release series are not supported.
+The package pipeline booted the official
+`openwrt-24.10.4-armsr-armv8-generic-ext4-combined-efi.img.gz` image in QEMU.
+The downloaded image matched OpenWrt's published SHA-256
+`2129ab59e79dff64537779f24befbc6bee241b72998b9ea434a1166f317dc30c`.
 
-## Application checks
+The clean VM accepted signed official package lists, installed release-native
+`kmod-nft-tproxy`, geodata and all three r11 packages, then reported:
 
-The release branch combines the independently reviewed upstream changes for
-marked dashboard probes, OpenWrt LAN bridges, per-subscription update modes and
-automatic proxy-group membership. The subscription dialog contains one
-four-value update-mode selector: Disabled, On service start, At an interval and
-At an interval with fail-safe recovery. The retired per-subscription auto-select
-switch is absent. Automatic server membership is a separate switch in each
-proxy group's settings.
+```text
+v2raya-resilient             2.5.7-resilient.5-r11.resilient1
+v2raya-resilient-core        2.5.7-resilient.5-r11.resilient1
+luci-app-v2raya-resilient    26.268.0-r11.resilient1
+v2rayA                       2.5.7-resilient.5
+V2RAYA_CORE                  2.5.7-resilient.5 (based on xray-core 26.7.28)
+```
 
-GUI lint, type checking, six-locale validation, 217 tests across 45 files and
-the production build passed. The complete service Go suite passed apart from the
-existing host-dependent resolver symlink test, which was explicitly skipped.
-The matching core built for Linux ARM64 with Go 1.26. Its macOS-only process
-ownership test cannot read the protected kernel socket table in this runner;
-the Linux ARM64 core starts normally in the VM and reports a matching version.
+The service started, the embedded GUI returned its HTML, the LuCI page was
+present and `/api/version` returned `serviceValid: true`,
+`coreVersionValid: true`, version `2.5.7-resilient.5` for both components and
+variant `V2rayaCore`.
 
-The automatic-group VM harness passed these scenarios with real core processes:
+The generic image's root partition is too small for both static Go binaries,
+so the test attaches a temporary 512 MiB `/usr` disk. It also adds a test-only
+`aarch64_cortex-a53` opkg architecture entry; the VM itself is
+`aarch64_generic`. Neither adjustment is part of a physical-router install.
 
-1. A newly enabled automatic group changes the legacy `60s` probe default to
-   `300s`.
-2. Probes cover two subscriptions and standalone nodes in the complete Proxies
-   catalog, with no more than two temporary probe cores at once.
-3. Automatic mode owns the group member list and rejects manual edits; disabling
-   it freezes the last members and restores manual editing.
-4. Failed nodes are removed and recovered nodes return on the next pass.
-5. An empty automatic group blocks only traffic assigned to that group. Direct
-   and unrelated routes remain usable; retained transparent-proxy rules prevent
-   a silent direct escape.
-6. Database migration enables `PROXY` automatic membership once when any old
-   subscription used auto-select, is idempotent and preserves later user edits.
-7. A 200-node catalog completed in 2.90 seconds with a 101156 KiB peak RSS.
+The VM run exposed and prevented two Windows-host packaging defects before
+publication: CRLF in the init script and backslash directory names in the LuCI
+tar archive. The published IPKs contain LF shell files and POSIX archive paths.
 
-Subscription-policy tests cover legacy migration, all four modes, startup and
-regular scheduling, bounded fail-safe retries, retained nodes after failed or
-empty downloads, manual-stop behavior and non-overlapping work.
+## Signed feed
 
-## Package and feed checks
+`Packages` was signed and verified with OpenWrt `usign` inside an OpenWrt
+24.10.4 VM. Resilient r11 uses public-key fingerprint `9478c50315c92021` and
+public-key SHA-256
+`7a5f9426bdbacd25d1e89ad7e5e65579b2c33bcd278b0489772f3ab017df8787`.
+The private key is not present in the repository.
 
-The package index is signed with the existing Resilient key
-`9f02e659f24749fa`; verification succeeded before installation. Exact package
-dependencies require the matching service/core pair.
+This r11 key differs from the previous Resilient feed key. Existing
+installations must run `add-resilient-feed.sh` once before updating package
+lists. The script validates the new public key and index signature before
+installing the key; it does not change v2rayA packages or settings.
 
-A signed-feed r9-to-r10 upgrade on the VM passed:
-
-- `opkg update` accepted the index signature and listed all three r10 upgrades.
-- Installing only `luci-app-v2raya-resilient` upgraded the exact service/core
-  dependencies.
-- The existing database stayed byte-for-byte identical during package upgrade,
-  SHA256 `e60f1df93992a40dc6d0450a42bdf35ab743635fdc41da3285be9921b9e125aa`.
-- The account and saved subscription remained available after startup.
-- LuCI System > Software displayed all three packages as Installed at r10.
-- The running API reported service/core `2.5.7-resilient.4` and
-  `coreVersionValid=true`.
-
-A clean signed-feed install also passed after removing the three packages and
-all disposable test configuration. Installing the LuCI package pulled the
-service and core, created a disabled UCI configuration, left the service stopped
-until enabled, and then started with `hasAccounts=false`, matching versions and
-`coreVersionValid=true`. The preserved test database and UCI file were restored
-after the clean-install check.
-
-The independent 24.10.5 clean VM also passed service restart and reboot,
-visual LuCI and embedded-GUI checks, all four subscription update modes, a
-200-node bounded-probe pass, automatic whole-catalog group failover, empty-group
-blocking without a direct leak, recovery after an injected core failure, and
-both legacy database migrations.
-
-The r9 source and feed remain available in the
-`release/resilient-openwrt-24.10-r9` and `openwrt-feed-r9` branches. The normal
-feed URL now provides r10 so existing installations can upgrade without adding
-another source.
-
-## Scope
-
-Blocking assertions cover router-originated IPv4 TCP with nftables TPROXY. This
-is not a system-wide kill switch for service/core crashes, manual shutdown, TUN
-or custom hooks. IPv6/UDP escape paths, physical Cudy TR3000 hardware,
-wireless/offload and a full OpenWrt SDK build are not validated. The VM uses a
-test-only Cortex-A53 package alias on generic ARM64; do not add architecture
-aliases on production routers.
+The reproducible ARM64 test entry point is
+`tools/test-openwrt-24.10.4-arm64.ps1` on the packaging branch.
