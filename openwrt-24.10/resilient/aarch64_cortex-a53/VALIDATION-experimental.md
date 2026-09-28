@@ -1,8 +1,8 @@
 # x-Ray VPN experimental validation
 
-Version: `2026.09.28-experimental.1`  
-Release name: `xray-proxy-client-experimental`  
-Source: `002c144fef9be4aeee4716adb2f8d2913d04d6ca`  
+Version: `2026.09.28-experimental.1`
+Release name: `xray-proxy-client-experimental`
+Source: `002c144fef9be4aeee4716adb2f8d2913d04d6ca`
 Test date: 2026-09-28. Target tested: OpenWrt 24.10.4, ARM64 VM; IPK architecture `aarch64_cortex-a53`.
 
 **Build, package integrity and ARM functional validation: PASS. Manual UI acceptance: user reported successful testing.**
@@ -39,7 +39,7 @@ The local UI endpoint returned HTTP 200 and the expected version API. The user s
 
 These are controlled functional VM checks, not a CPU, RAM, energy, latency, censorship-evasion or detection benchmark. Prompt HTTP/1 remote-origin cancellation, transparent interception and general all-dead fallback behavior are not established by this run. Existing raw TCP half-close and external ECH/CA limitations are not claimed fixed. Optional resumption and altered XHTTP POST-range experiments remain off.
 
-This is an experimental fork release, not an official OpenWrt feed submission or a signed package feed. Physical-router testing was outside this run. Public assets contain no fixture private keys, config databases, SSH keys or raw private evidence.
+This is an experimental fork release distributed through our personal signed feed, not an official OpenWrt feed submission. Physical-router testing was outside this run. Public assets contain no fixture private keys, config databases, SSH keys or raw private evidence.
 
 ## Binary SHA-256
 
