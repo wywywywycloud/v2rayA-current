@@ -23,18 +23,34 @@ import (
 
 const maxAssetDownloadSize int64 = 256 << 20
 
-func readAssetBody(resp *http.Response) ([]byte, error) {
-	if resp.ContentLength > maxAssetDownloadSize {
-		return nil, fmt.Errorf("asset exceeds the 256 MiB download limit")
+func writeAssetBody(resp *http.Response, target string, limit int64) error {
+	tooLarge := fmt.Errorf("asset exceeds the %d MiB download limit", limit>>20)
+	if resp.ContentLength > limit {
+		return tooLarge
 	}
-	b, err := io.ReadAll(io.LimitReader(resp.Body, maxAssetDownloadSize+1))
+	// Keep the previous asset intact until the complete, bounded response is
+	// on disk. A same-directory temporary file permits atomic rename on Unix;
+	// replacing a staging symlink must not overwrite its referent.
+	file, err := os.CreateTemp(filepath.Dir(target), ".v2raya-download-*")
 	if err != nil {
-		return nil, err
+		return err
 	}
-	if int64(len(b)) > maxAssetDownloadSize {
-		return nil, fmt.Errorf("asset exceeds the 256 MiB download limit")
+	defer os.Remove(file.Name())
+	defer file.Close()
+	written, err := io.Copy(file, io.LimitReader(resp.Body, limit+1))
+	if err != nil {
+		return err
 	}
-	return b, nil
+	if written > limit {
+		return tooLarge
+	}
+	if err := file.Chmod(0644); err != nil {
+		return err
+	}
+	if err := file.Close(); err != nil {
+		return err
+	}
+	return os.Rename(file.Name(), target)
 }
 
 func GetV2rayLocationAssetOverride() string {
@@ -277,14 +293,7 @@ func download(c *http.Client, url string, to string) (err error) {
 	}
 	defer resp.Body.Close()
 	status = resp.Status
-	b, err := readAssetBody(resp)
-	if err != nil {
-		return common.Coded("ASSET_DOWNLOAD_FAILED", err, map[string]interface{}{
-			"host":   host,
-			"status": status,
-		})
-	}
-	if err = os.WriteFile(to, b, 0644); err != nil {
+	if err = writeAssetBody(resp, to, maxAssetDownloadSize); err != nil {
 		return common.Coded("ASSET_DOWNLOAD_FAILED", err, map[string]interface{}{
 			"host":   host,
 			"status": status,

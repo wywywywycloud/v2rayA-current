@@ -16,9 +16,10 @@ func (f assetTransport) RoundTrip(r *http.Request) (*http.Response, error) { ret
 func TestAssetBodyOverLimitIsRejected(t *testing.T) {
 	client := &http.Client{Transport: assetTransport(func(*http.Request) (*http.Response, error) {
 		return &http.Response{
-			StatusCode: http.StatusOK,
-			Status:     "200 OK",
-			Body:       io.NopCloser(strings.NewReader(strings.Repeat("x", int(maxAssetDownloadSize+1)))),
+			StatusCode:    http.StatusOK,
+			Status:        "200 OK",
+			ContentLength: maxAssetDownloadSize + 1,
+			Body:          io.NopCloser(strings.NewReader("not read")),
 		}, nil
 	})}
 	target := filepath.Join(t.TempDir(), "asset.dat")
@@ -29,6 +30,49 @@ func TestAssetBodyOverLimitIsRejected(t *testing.T) {
 		t.Fatalf("oversized asset created target: %v", err)
 	}
 }
+
+func TestStreamAssetPreservesTargetOnFailure(t *testing.T) {
+	for _, mode := range []string{"over-limit", "read-error", "success"} {
+		t.Run(mode, func(t *testing.T) {
+			dir := t.TempDir()
+			target := filepath.Join(dir, "asset.dat")
+			if err := os.WriteFile(target, []byte("previous"), 0644); err != nil {
+				t.Fatal(err)
+			}
+			var body io.Reader = strings.NewReader("replacement")
+			if mode == "over-limit" {
+				body = strings.NewReader(strings.Repeat("x", 1025))
+			}
+			if mode == "read-error" {
+				body = io.MultiReader(body, brokenAssetReader{})
+			}
+			resp := &http.Response{ContentLength: -1, Body: io.NopCloser(body)}
+			err := writeAssetBody(resp, target, 1024)
+			if mode == "success" && err != nil {
+				t.Fatal(err)
+			}
+			if mode != "success" && err == nil {
+				t.Fatal("expected failed download")
+			}
+			want := "previous"
+			if mode == "success" {
+				want = "replacement"
+			}
+			got, err := os.ReadFile(target)
+			if err != nil || string(got) != want {
+				t.Fatalf("target %q, err=%v, want=%q", got, err, want)
+			}
+			entries, err := os.ReadDir(dir)
+			if err != nil || len(entries) != 1 {
+				t.Fatalf("temporary download leaked: %v, %v", entries, err)
+			}
+		})
+	}
+}
+
+type brokenAssetReader struct{}
+
+func (brokenAssetReader) Read([]byte) (int, error) { return 0, io.ErrUnexpectedEOF }
 
 // The core only reads XRAY_LOCATION_ASSET, so a dat file that exists in a
 // system directory has to be linked into that directory before the core runs.
