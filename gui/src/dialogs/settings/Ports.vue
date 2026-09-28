@@ -96,7 +96,7 @@ function share(link: string) {
     {
       title: t("customAddressPort.portVmessLink"),
       link,
-      name: "VMess | v2rayA",
+      name: "VMess | x-Ray VPN",
       type: "server",
     },
     { width: 420 },

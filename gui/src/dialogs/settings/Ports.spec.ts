@@ -157,7 +157,7 @@ describe("the address and ports dialog", () => {
     expect(dialogState.stack.at(-1)?.props).toEqual({
       title: en.customAddressPort.portVmessLink,
       link: loaded.vmessLink,
-      name: "VMess | v2rayA",
+      name: "VMess | x-Ray VPN",
       type: "server",
     });
     closeAllDialogs();
