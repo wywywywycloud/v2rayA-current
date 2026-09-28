@@ -32,6 +32,7 @@ type Process struct {
 	// mutex protect the proc
 	mutex          sync.Mutex
 	proc           *os.Process
+	command        *coreCommand
 	procCancel     func() // cancel func for proc
 	template       *Template
 	tag2WhichIndex map[string]int
@@ -42,12 +43,11 @@ type Process struct {
 func NewProcess(tmpl *Template,
 	prestart func() error, poststart func() error,
 	postUnexpectedStop func(p *Process),
-) (*Process, error) {
+) (_ *Process, err error) {
 	process := &Process{
 		template: tmpl,
 		done:     make(chan struct{}),
 	}
-	var err error
 	var rollbackStage int
 	defer func() {
 		if err != nil {
@@ -106,10 +106,19 @@ func NewProcess(tmpl *Template,
 		return nil, common.Coded("CORE_START_FAILED", err, map[string]interface{}{"detail": err.Error()})
 	}
 	rollbackStage = 1 // xray 已启动
+	// A failed post-start hook must also reap the command and its I/O workers.
+	defer func() {
+		if err != nil {
+			process.expectedStop.Store(true)
+			cancel()
+			_, _ = proc.Wait()
+		}
+	}()
 	if err = poststart(); err != nil {
 		return nil, err
 	}
-	process.proc = proc
+	process.proc = proc.Process
+	process.command = proc
 	var unexpectedExiting atomic.Bool
 	go func() {
 		defer close(process.done)
@@ -118,6 +127,7 @@ func NewProcess(tmpl *Template,
 			// canceled by v2rayA
 			return
 		}
+		unexpectedExiting.Store(true)
 		defer postUnexpectedStop(process)
 		var t []string
 		if p != nil {
@@ -130,7 +140,6 @@ func NewProcess(tmpl *Template,
 			t = append(t, e.Error())
 		}
 		log.Warn("v2ray-core: %v", strings.Join(t, ": "))
-		unexpectedExiting.Store(true)
 	}()
 	// ports to check
 	portList := []string{strconv.Itoa(tmpl.ApiPort)}
@@ -202,6 +211,11 @@ func (p *Process) Close() error {
 		p.expectedStop.Store(true)
 		p.procCancel = nil
 		cancel()
+		// Wait for command cleanup, not the monitor callback, which may need
+		// the manager lock held by our caller during stop/reload.
+		if p.command != nil {
+			_, _ = p.command.Wait()
+		}
 		err := p.template.Close()
 		if err != nil {
 			return err
@@ -226,21 +240,42 @@ func (p *Process) WaitUntilExit(ctx context.Context) error {
 	}
 }
 
-func RunWithLog(ctx context.Context, name string, argv []string, dir string, env []string) (*os.Process, error) {
+// coreCommand owns the exec.Cmd waiter, including context and pipe cleanup.
+// Wait can be called by both startup rollback and the process monitor.
+type coreCommand struct {
+	*os.Process
+	done  chan struct{}
+	state *os.ProcessState
+	err   error
+}
+
+func (c *coreCommand) Wait() (*os.ProcessState, error) {
+	<-c.done
+	return c.state, c.err
+}
+
+func RunWithLog(ctx context.Context, name string, argv []string, dir string, env []string) (*coreCommand, error) {
 	cmd := exec.CommandContext(ctx, name)
 	cmd.Args = argv
 	cmd.Dir = dir
 	cmd.Env = env
 	cmd.Stdout = logWriter
 	cmd.Stderr = logWriter
+	cmd.WaitDelay = 2 * time.Second
 	err := cmd.Start()
 	if err != nil {
 		return nil, err
 	}
-	return cmd.Process, nil
+	command := &coreCommand{Process: cmd.Process, done: make(chan struct{})}
+	go func() {
+		command.err = cmd.Wait()
+		command.state = cmd.ProcessState
+		close(command.done)
+	}()
+	return command, nil
 }
 
-func StartCoreProcess(ctx context.Context) (*os.Process, error) {
+func StartCoreProcess(ctx context.Context) (*coreCommand, error) {
 	v2rayBinPath, err := where.GetV2rayBinPath()
 	if err != nil {
 		return nil, err
