@@ -68,7 +68,13 @@ func TestNativeBurstAliasRuntime(t *testing.T) {
 
 func nativeForwardedPing(t *testing.T, cfg *xcore.Config) *burst.HealthPingConfig {
 	t.Helper()
+	return nativeForwardedPingWithMulti(t, cfg, 0)
+}
+
+func nativeForwardedPingWithMulti(t *testing.T, cfg *xcore.Config, wantMulti int) *burst.HealthPingConfig {
+	t.Helper()
 	var ping *burst.HealthPingConfig
+	multiCount := 0
 	for _, app := range cfg.App {
 		value, err := app.GetInstance()
 		if err != nil {
@@ -81,8 +87,14 @@ func nativeForwardedPing(t *testing.T, cfg *xcore.Config) *burst.HealthPingConfi
 			}
 			ping = value.PingConfig
 		case *multiobs.Config:
-			t.Fatal("top-level Burst unexpectedly adapted to Multi")
+			multiCount++
+			if len(value.Observers) != 0 {
+				t.Fatal("top-level Burst unexpectedly adapted to Multi")
+			}
 		}
+	}
+	if multiCount != wantMulti {
+		t.Fatalf("multi owners=%d want %d", multiCount, wantMulti)
 	}
 	if ping == nil {
 		t.Fatal("missing native Burst")
@@ -136,12 +148,13 @@ func TestNativeBurstAliasFileOverride(t *testing.T) {
 		name string
 		docs []string
 		want int32
+		wantMulti int
 	}{
-		{"alias_then_native", []string{alias, native}, 4},
-		{"native_then_alias", []string{native, alias}, 2},
-		{"unrelated_later_file", []string{alias, `{}`}, 2},
-		{"empty_multi_later_file", []string{alias, `{"multiObservatory":{}}`}, 2},
-		{"null_burst_later_file", []string{alias, `{"burstObservatory":null}`}, 2},
+		{"alias_then_native", []string{alias, native}, 4, 0},
+		{"native_then_alias", []string{native, alias}, 2, 0},
+		{"unrelated_later_file", []string{alias, `{}`}, 2, 0},
+		{"empty_multi_later_file", []string{alias, `{"multiObservatory":{}}`}, 2, 1},
+		{"null_burst_later_file", []string{alias, `{"burstObservatory":null}`}, 2, 0},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			var files []*xcore.ConfigSource
@@ -163,7 +176,7 @@ func TestNativeBurstAliasFileOverride(t *testing.T) {
 					if err != nil {
 						t.Fatal(err)
 					}
-					if p := nativeForwardedPing(t, cfg); p.SamplingCount != tc.want {
+					if p := nativeForwardedPingWithMulti(t, cfg, tc.wantMulti); p.SamplingCount != tc.want {
 						t.Fatalf("sampling=%d want %d", p.SamplingCount, tc.want)
 					}
 				})

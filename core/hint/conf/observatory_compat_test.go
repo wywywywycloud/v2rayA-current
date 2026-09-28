@@ -44,19 +44,35 @@ func TestObservatoryLegacyAndPrecedence(t *testing.T) {
 }
 
 func TestObservatoryEmptySemantics(t *testing.T) {
-	for _, raw := range []string{`{}`, `{"multiObservatory":null}`, `{"multiObservatory":{}}`, `{"multiObservatory":{"observers":[]}}`, `{"multiObservatory":{"observers":[{"tag":"empty"}]}}`} {
-		cfg, err := xcore.LoadConfig("json", bytes.NewBufferString(raw))
+	for _, tc := range []struct {
+		raw string
+		want int
+	}{
+		{`{}`, 0},
+		{`{"multiObservatory":null}`, 0},
+		{`{"multiObservatory":{}}`, 1},
+		{`{"multiObservatory":{"observers":[]}}`, 1},
+		{`{"multiObservatory":{"observers":[{"tag":"empty"}]}}`, 0},
+	} {
+		cfg, err := xcore.LoadConfig("json", bytes.NewBufferString(tc.raw))
 		if err != nil {
 			t.Fatal(err)
 		}
+		count := 0
 		for _, app := range cfg.App {
 			value, err := app.GetInstance()
 			if err != nil {
 				t.Fatal(err)
 			}
-			if _, ok := value.(*multiobs.Config); ok {
-				t.Errorf("empty observer semantics changed for %s", raw)
+			if multi, ok := value.(*multiobs.Config); ok {
+				count++
+				if len(multi.Observers) != 0 {
+					t.Errorf("unexpected child observers for %s: %v", tc.raw, multi.Observers)
+				}
 			}
+		}
+		if count != tc.want {
+			t.Errorf("multi owners=%d want %d for %s", count, tc.want, tc.raw)
 		}
 	}
 }
