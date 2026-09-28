@@ -6,12 +6,12 @@ architecture to a physical router to bypass opkg checks.
 
 ## Supported OpenWrt releases
 
-The current r20 feed is offered for **OpenWrt 24.10.0 through 24.10.8**,
+The current r21 feed is offered for **OpenWrt 24.10.0 through 24.10.8**,
 inclusive, on **aarch64_cortex-a53** routers. The feed setup script accepts all
 nine releases. r13 was installed across that entire version range; r17 was
 installed from the published signed feed on the official `armsr/armv8`
 VM images for **all nine releases**. The package, service, embedded GUI and LuCI
-checks passed on each version. Physical routers remain to be tested for r20.
+checks passed on each version. Physical routers remain to be tested for r21.
 Each VM also passed four proxied HTTP requests against a controlled local
 SOCKS5 test node.
 Use the newest 24.10 security update available for the router.
@@ -24,16 +24,17 @@ end-of-life OpenWrt series is listed as supported.
 
 | Package | Purpose | Version |
 | --- | --- | --- |
-| **luci-app-v2raya-resilient** | Install this one in LuCI; pulls the complete fork | 26.268.0-r20.resilient1 |
-| v2raya-resilient | Service and embedded v2rayA web interface | 2.5.7-resilient.13-r20.resilient1 |
-| v2raya-resilient-core | Exact matching proxy core | 2.5.7-resilient.13-r20.resilient1 |
+| **luci-app-v2raya-resilient** | Install this one in LuCI; pulls the complete fork | 26.268.0-r21.resilient1 |
+| v2raya-resilient | Service and embedded v2rayA web interface | 2.5.7-resilient.14-r21.resilient1 |
+| v2raya-resilient-core | Exact matching proxy core | 2.5.7-resilient.14-r21.resilient1 |
 
-r20 separates automatic membership from health checks and limits probing to
-one temporary core beside the traffic core. Keep-current measures the current
-server's speed at each configured interval and only searches alternatives on
-failure or low speed. Least latency and random check candidates sequentially;
-First available is removed. The first-install defaults and manual subscription
-bypass confirmation from earlier releases are retained.
+r21 keeps subscription reordering and renaming from restarting the core, preserves
+every automatic policy across server changes, and keeps transparent interception
+installed through group-switch startup and rollback failures. Keep-current only
+replaces a reachable server when the catalog really changes; low or unknown
+speed alone does not evict it. Proxy-tagged UDP DNS uses its configured transport.
+The one-probe-core bound, first-install defaults and manual subscription bypass
+confirmation are retained.
 
 The menu is **Services > v2rayA Resilient**. Configuration and service paths retain
 `v2raya` so existing settings and accounts can survive replacement. This is a
@@ -100,26 +101,33 @@ always retain an off-router backup.
 
 ## Configure automatic groups and updates
 
-In the application, open the proxy group settings and enable **Automatically
-add available servers**. The group checks the entire Proxies catalog using its
-probe URL; the initial PROXY group defaults to **3000s**. The selection list offers latency,
-random-within-a-bounded-latency-window and first-available strategies. Use the
-`?` help beside the selector for the exact behavior. An empty automatic group
-blocks traffic assigned to it. On a manual start, cached group members let the
-core start immediately while membership is checked in the background; a group
-without cached members is checked before the first start.
-Random chooses a server at first connection or after the selected server fails;
-it does not rotate a healthy connection on each scheduled check. Keep-current
-likewise retains its working server, including through a subscription reorder.
-Choosing a concrete server in the dashboard pins it and changes the strategy to
-**Do not switch**. Choosing **Auto** returns the group to least latency. The
-dashboard distinguishes automatic selection, a fixed pin and keep-current
-failover, and both group gears edit the group currently shown on the card.
-Each candidate checks the configured URL and downloads a concurrent 256 KiB
-speed sample. Servers below 100 KiB/s are excluded while a faster server is
-available; if all reachable servers are slower, the fastest measured server is
-kept as a fallback.
-This is not a system-wide kill switch for service crashes or manual shutdown.
+Enable **Automatically add all servers** in the selected group's settings to
+copy the entire catalog, including unavailable nodes, without probing them.
+The initial PROXY group defaults to **3000s** between scheduled checks.
+
+- **Keep current until failure** retains a reachable current server even when
+  its speed is low or unknown. Three consecutive failed reachability checks
+  trigger replacement. A real membership or connection-parameter change also
+  triggers a fresh least-latency, speed-qualified choice.
+- **Least latency** orders candidates by TCP latency and stops at the first
+  successful URL check and complete 256 KiB speed sample at 100 KiB/s or above.
+- **Random** shuffles candidates at each scheduled selection and checks them
+  sequentially using the same availability/speed criteria.
+- **Round robin** balances the members that passed those checks.
+- **Do not switch** keeps an explicitly pinned server.
+
+A server change never changes the selected policy. Pinning a server pauses an
+automatic policy; **Auto** clears that pin and resumes the same policy. Reordering
+or renaming a subscription leaves the selected connection and running core intact.
+New candidates without an eligible speed sample are excluded; if no candidate
+qualifies, proxy-assigned traffic is blocked and membership is retained.
+
+During a real group switch, unchanged TPROXY/REDIRECT interception stays in place,
+including startup and rollback failure. RoutingA's direct/proxy split is retained.
+A configuration whose interception cannot be preserved (including TUN) rejects
+the switch before stopping the running core. Existing TCP sessions can end on a
+real server/core change. Explicit service stop or a service crash is outside this
+group-switch protection.
 
 For each subscription, choose one **Automatic subscription update** mode:
 
@@ -149,11 +157,11 @@ and LuCI package together. If there is too little free flash, it stops before
 upgrading any of them. The three package versions are checked afterward. opkg
 does not provide an atomic transaction, so retain a configuration backup and
 inspect the package status if an installation fails for another reason.
-An already installed r20 service/core pair does not need another upgrade.
+Upgrade an existing r20 installation to r21 to receive these fixes.
 
 ## Sources and validation
 
-- Application/core: [Resilient source](https://github.com/wywywywycloud/v2rayA-current/tree/main), application commit `b3c8a0a4`, with a packaging-only defaults patch.
+- Application/core: [Resilient source](https://github.com/wywywywycloud/v2rayA-current/tree/main), application commit `283daeb0`, with a packaging-only defaults patch.
 - Packaging/LuCI: [Resilient packaging branch](https://github.com/wywywywycloud/v2raya-openwrt-current/tree/release/resilient-openwrt-24.10).
 - [Signed feed and validation report](https://github.com/wywywywycloud/v2rayA-current/tree/openwrt-feed/openwrt-24.10/resilient).
 
@@ -188,3 +196,6 @@ remained saved, and the core stayed stopped. See [r19 validation](VALIDATION-r19
 
 r20 was tested on one 256 MiB OpenWrt 24.10.4 VM. Membership refresh, speed-based
 failover and the two-core process bound passed. See [r20 validation](https://github.com/wywywywycloud/v2rayA-current/blob/openwrt-feed/openwrt-24.10/resilient/VALIDATION-r20.md).
+
+r21 reproduces subscription churn and startup failures before applying the fix.
+See [the r21 validation report](VALIDATION-r21.md) for test conditions and limits.
