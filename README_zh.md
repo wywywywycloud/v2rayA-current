@@ -35,7 +35,7 @@ x-Ray VPN 以服务形式运行，通过浏览器操作，可部署在本机、�
 
 ## 安装
 
-实验版目标平台为 OpenWrt **24.10.4 ARM64**（`aarch64_cortex-a53`）。请使用[实验版本](https://github.com/wywywywycloud/v2rayA-resilient/releases/tag/experimental-2026.09.28.1)中配套的三个 IPK。参阅[可复现构建与打包说明](install/openwrt-experimental/README.md)及该版本的验证记录。服务与内核必须一起安装或回退。
+实验版目标平台为 OpenWrt **24.10.4 ARM64**（`aarch64_cortex-a53`）。请使用[实验版本](https://github.com/wywywywycloud/v2raya-openwrt-current/releases/tag/experimental-2026.09.28.1)中配套的三个 IPK。参阅[可复现构建与打包说明](install/openwrt-experimental/README.md)及该版本的验证记录。服务与内核必须一起安装或回退。
 
 上游发行包和之前签名的 Resilient 软件源属于其他构建；其安装测试矩阵不能证明本实验版本已经通过相同测试。
 

@@ -35,7 +35,7 @@ x-Ray VPN runs as a service and is used from a browser, on the machine itself or
 
 ## Install
 
-The experimental target is OpenWrt **24.10.4 ARM64** (`aarch64_cortex-a53`). Use the matching three IPKs attached to the [experimental release](https://github.com/wywywywycloud/v2rayA-resilient/releases/tag/experimental-2026.09.28.1). See [reproducible build and packaging instructions](install/openwrt-experimental/README.md) and that release’s validation notes for the actual artifact checks. Install or roll back service and core together.
+The experimental target is OpenWrt **24.10.4 ARM64** (`aarch64_cortex-a53`). Use the matching three IPKs attached to the [experimental release](https://github.com/wywywywycloud/v2raya-openwrt-current/releases/tag/experimental-2026.09.28.1). See [reproducible build and packaging instructions](install/openwrt-experimental/README.md) and that release’s validation notes for the actual artifact checks. Install or roll back service and core together.
 
 Upstream distribution packages and the earlier signed Resilient feed are different builds; their installation matrices do not validate this experimental release.
 

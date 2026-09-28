@@ -35,7 +35,7 @@ x-Ray VPN работает как служба и управляется из б
 
 ## Установка
 
-Целевая платформа experimental — OpenWrt **24.10.4 ARM64** (`aarch64_cortex-a53`). Используйте три согласованных IPK из [экспериментального выпуска](https://github.com/wywywywycloud/v2rayA-resilient/releases/tag/experimental-2026.09.28.1). [Инструкция воспроизводимой сборки и упаковки](install/openwrt-experimental/README.md) и отчёт о проверке в выпуске описывают конкретные артефакты. Устанавливайте и откатывайте сервис и ядро вместе.
+Целевая платформа experimental — OpenWrt **24.10.4 ARM64** (`aarch64_cortex-a53`). Используйте три согласованных IPK из [экспериментального выпуска](https://github.com/wywywywycloud/v2raya-openwrt-current/releases/tag/experimental-2026.09.28.1). [Инструкция воспроизводимой сборки и упаковки](install/openwrt-experimental/README.md) и отчёт о проверке в выпуске описывают конкретные артефакты. Устанавливайте и откатывайте сервис и ядро вместе.
 
 Пакеты upstream и прежний подписанный feed Resilient — другие сборки; их матрицы установки не подтверждают проверку этого experimental-выпуска.
 

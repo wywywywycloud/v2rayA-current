@@ -1,5 +1,7 @@
 # x-Ray VPN experimental
 
+The OpenWrt release is named **xray-proxy-client-experimental** and is published in the existing [OpenWrt repository](https://github.com/wywywywycloud/v2raya-openwrt-current/releases/tag/experimental-2026.09.28.1). x-Ray VPN is the user-facing product name; repository and service identities stay unchanged.
+
 x-Ray VPN is an experimental edition of v2rayA-resilient using the existing Xray-core and x/net forks. Install or roll back the service and matching core together. Binary names (`v2raya`, `v2raya_core`), API, configuration directories and service identities remain compatible.
 
 Included corrections cover cancellation of probes and shared DNS work, duplicate probe ownership, process/output cleanup, streaming asset downloads, immutable TLS reload snapshots, XHTTP connection ownership and slow-upload progress, preservation of TLS record boundaries, and early validation of incompatible REALITY fingerprints. H2 SETTINGS GREASE applies only to the resolved Chrome 133 profile.
