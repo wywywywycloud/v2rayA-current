@@ -1,6 +1,8 @@
 // Package conf provides a v2raya-core JSON configuration loader.
 // It extends xray-core's JSON loader with support for multiObservatory,
 // and automatically injects the v2ray-compatible observatory gRPC service.
+// Top-level burstObservatory stays native; the compatible service can query it
+// directly, and adapting it again would start a second set of probes.
 // It also pre-processes custom protocols (anytls, juicity, tuic) from the JSON
 // config, strips them before xray parses, then appends the built handlers.
 //
@@ -390,25 +392,6 @@ func injectMultiObservatory(coreConfig *xray_core.Config, mo *multiObsJSON) {
 	coreConfig.App = append(coreConfig.App, serial.ToTypedMessage(cfg))
 }
 
-// injectBurstObservatoryAsMulti adapts v5 burstObservatory to a single-group MultiObservatory.
-// This keeps v2rayA's per-tag API path working: unknown tag requests fall back to aggregated result.
-func injectBurstObservatoryAsMulti(coreConfig *xray_core.Config, burst *burstObsJSON) {
-	if burst == nil || len(burst.SubjectSelector) == 0 {
-		return
-	}
-	observer := &multiobs.ObserverConfig{
-		Tag:             "_burst_global",
-		SubjectSelector: burst.SubjectSelector,
-	}
-	if burst.PingConfig != nil {
-		observer.ProbeUrl = burst.PingConfig.Destination
-		observer.ProbeInterval = int64(burst.PingConfig.Interval)
-		applyAdditionalPingConfig(observer, burst.PingConfig)
-	}
-	cfg := &multiobs.Config{Observers: []*multiobs.ObserverConfig{observer}}
-	coreConfig.App = append(coreConfig.App, serial.ToTypedMessage(cfg))
-}
-
 // normalizeObserverConfig converts legacy + v5 observatory JSON into one runtime observer config.
 func normalizeObserverConfig(e multiObsEntryJSON) *multiobs.ObserverConfig {
 	subjectSelector := e.SubjectSelector
@@ -571,6 +554,7 @@ func loadAndExtend(arg string) (*xray_conf.Config, *extendedJSON, *customConfig,
 	if err := json.Unmarshal(raw, ext); err != nil {
 		return nil, nil, nil, errors.New("invalid observatory config").Base(err)
 	}
+	applyNativeBurstSampling(c, ext)
 	return c, ext, customs, nil
 }
 
@@ -604,15 +588,15 @@ func buildConfigFromFiles(files []*xray_core.ConfigSource) (*xray_core.Config, e
 		if err != nil {
 			return nil, errors.New("failed to decode config: ", file).Base(err)
 		}
+		e := &extendedJSON{}
+		if err := json.Unmarshal(raw, e); err != nil {
+			return nil, errors.New("invalid observatory config").Base(err)
+		}
+		applyNativeBurstSampling(c, e)
 		if i == 0 {
 			*cf = *c
 		} else {
 			cf.Override(c, file.Name)
-		}
-
-		e := &extendedJSON{}
-		if err := json.Unmarshal(raw, e); err != nil {
-			return nil, errors.New("invalid observatory config").Base(err)
 		}
 		if e.MultiObservatory != nil || e.BurstObservatory != nil {
 			ext = e
@@ -625,8 +609,6 @@ func buildConfigFromFiles(files []*xray_core.ConfigSource) (*xray_core.Config, e
 	}
 	if ext != nil && ext.MultiObservatory != nil {
 		injectMultiObservatory(coreConfig, ext.MultiObservatory)
-	} else if ext != nil && ext.BurstObservatory != nil {
-		injectBurstObservatoryAsMulti(coreConfig, ext.BurstObservatory)
 	}
 	injectCompatService(coreConfig)
 	reorderAppsForAPIReadiness(coreConfig)
@@ -675,8 +657,6 @@ func init() {
 				}
 				if ext != nil && ext.MultiObservatory != nil {
 					injectMultiObservatory(coreConfig, ext.MultiObservatory)
-				} else if ext != nil && ext.BurstObservatory != nil {
-					injectBurstObservatoryAsMulti(coreConfig, ext.BurstObservatory)
 				}
 				injectCompatService(coreConfig)
 				reorderAppsForAPIReadiness(coreConfig)
@@ -702,14 +682,13 @@ func init() {
 				if err := json.Unmarshal(raw, e); err != nil {
 					return nil, errors.New("invalid observatory config").Base(err)
 				}
+				applyNativeBurstSampling(c, e)
 				coreConfig, err := c.Build()
 				if err != nil {
 					return nil, err
 				}
 				if e.MultiObservatory != nil {
 					injectMultiObservatory(coreConfig, e.MultiObservatory)
-				} else if e.BurstObservatory != nil {
-					injectBurstObservatoryAsMulti(coreConfig, e.BurstObservatory)
 				}
 				injectCompatService(coreConfig)
 				reorderAppsForAPIReadiness(coreConfig)

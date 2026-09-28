@@ -8,7 +8,17 @@ import (
 	"strings"
 
 	"github.com/xtls/xray-core/common/errors"
+	xray_conf "github.com/xtls/xray-core/infra/conf"
 )
+
+// Normalize the v5 alias before per-file Override so the native Burst owns it.
+func applyNativeBurstSampling(config *xray_conf.Config, extensions *extendedJSON) {
+	if extensions.BurstObservatory == nil || extensions.BurstObservatory.PingConfig == nil ||
+		config.BurstObservatory == nil || config.BurstObservatory.HealthCheck == nil {
+		return
+	}
+	config.BurstObservatory.HealthCheck.SamplingCount = extensions.BurstObservatory.PingConfig.SamplingCount
+}
 
 func (e *extendedJSON) UnmarshalJSON(data []byte) error {
 	var raw struct {

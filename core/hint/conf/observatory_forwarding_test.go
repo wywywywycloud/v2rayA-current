@@ -19,7 +19,6 @@ func TestObservatoryPingForwarding(t *testing.T) {
 	for name, document := range map[string]string{
 		"settings":    `{"multiObservatory":{"observers":[{"tag":"g","settings":{"subjectSelector":["direct"],` + ping + `}}]}}`,
 		"nestedBurst": `{"multiObservatory":{"observers":[{"tag":"g","burstObservatory":{"subjectSelector":["direct"],` + ping + `}}]}}`,
-		"globalBurst": `{"burstObservatory":{"subjectSelector":["direct"],` + ping + `}}`,
 	} {
 		t.Run(name, func(t *testing.T) {
 			path := filepath.Join(t.TempDir(), "config.json")
@@ -90,6 +89,9 @@ func TestTopLevelBurstAppInventory(t *testing.T) {
 		}
 	}
 	t.Logf("nativeBurst=%d multiObservatory=%d", native, multi)
+	if native != 1 || multi != 0 {
+		t.Fatalf("top-level Burst must have one native owner, got native=%d multi=%d", native, multi)
+	}
 }
 
 func TestObservatoryInvalidPingConfig(t *testing.T) {
