@@ -85,10 +85,13 @@ func TestGroupStrategiesUseExpectedCoreStrategy(t *testing.T) {
 		strategy        configure.ObservatoryType
 		coreStrategy    configure.ObservatoryType
 		wantObservatory bool
+		fallbackTag     string
 	}{
-		{strategy: configure.LeastPing, coreStrategy: configure.Random},
-		{strategy: configure.Fixed, coreStrategy: configure.Random},
-		{strategy: configure.RoundRobin, coreStrategy: configure.RoundRobin, wantObservatory: true},
+		{strategy: configure.LeastPing, coreStrategy: configure.Random, fallbackTag: "block"},
+		{strategy: configure.KeepCurrent, coreStrategy: configure.Random, fallbackTag: "block"},
+		{strategy: configure.Random, coreStrategy: configure.Random, fallbackTag: "block"},
+		{strategy: configure.Fixed, coreStrategy: configure.Random, fallbackTag: "block"},
+		{strategy: configure.RoundRobin, coreStrategy: configure.RoundRobin, fallbackTag: "block"},
 	} {
 		t.Run(tc.strategy.String(), func(t *testing.T) {
 			setting := configure.DefaultOutboundSetting()
@@ -112,12 +115,27 @@ func TestGroupStrategiesUseExpectedCoreStrategy(t *testing.T) {
 				t.Fatalf("balancers = %+v", tmpl.Routing.Balancers)
 			}
 			balancer := tmpl.Routing.Balancers[0]
-			if balancer.Strategy.Type != tc.coreStrategy.String() || balancer.FallbackTag != "block" {
+			if balancer.Strategy.Type != tc.coreStrategy.String() || balancer.FallbackTag != tc.fallbackTag {
 				t.Fatalf("strategy %q generated %+v", tc.strategy, balancer)
 			}
-			gotObservatory := tmpl.MultiObservatory != nil && len(tmpl.MultiObservatory.Observers) == 1
+			gotObservatory := tmpl.MultiObservatory != nil && len(tmpl.MultiObservatory.Observers) > 0
 			if gotObservatory != tc.wantObservatory {
 				t.Fatalf("strategy %q observatory=%v, want %v", tc.strategy, gotObservatory, tc.wantObservatory)
+			}
+			if tc.strategy == configure.RoundRobin && tmpl.MultiObservatory == nil {
+				t.Fatal("roundrobin fallback requires the empty observatory feature")
+			}
+			if tc.strategy == configure.RoundRobin && len(tmpl.ApiCloses) != 1 {
+				t.Fatal("empty observatory must not start status polling")
+			}
+			for _, selector := range balancer.Selector {
+				found := false
+				for _, outbound := range tmpl.Outbounds {
+					found = found || outbound.Tag == selector
+				}
+				if !found {
+					t.Fatalf("selector %q has no generated outbound", selector)
+				}
 			}
 		})
 	}

@@ -60,6 +60,13 @@ func (t *Template) SetAPI(serverData *ServerData) (port int, err error) {
 				selector = append(selector, GroupWrapper(vi.GetName()))
 			}
 
+			if strategy == configure.RoundRobin {
+				// The worker owns health checks. Xray still requires an observatory
+				// feature for fallbackTag, so supply one without any probe workers.
+				if t.MultiObservatory == nil {
+					t.MultiObservatory = &coreObj.MultiObservatory{}
+				}
+			}
 			t.Routing.Balancers = append(t.Routing.Balancers, coreObj.Balancer{
 				Tag:         outbound,
 				Selector:    selector,
@@ -73,7 +80,7 @@ func (t *Template) SetAPI(serverData *ServerData) (port int, err error) {
 			})
 
 			switch strings.ToLower(coreStrategy.String()) {
-			case "leastping", "roundrobin":
+			case "leastping":
 				probeUrl := serverData.OutboundName2Setting[outbound].ProbeURL
 				if _, err := url.Parse(probeUrl); err != nil {
 					log.Warn("observatory: %v", err)
@@ -99,7 +106,7 @@ func (t *Template) SetAPI(serverData *ServerData) (port int, err error) {
 				})
 			}
 		}
-		if t.MultiObservatory != nil || t.Observatory != nil {
+		if (t.MultiObservatory != nil && len(t.MultiObservatory.Observers) > 0) || t.Observatory != nil {
 			// v2raya_core supports ObservatoryService via the v2ray-compat gRPC path.
 			if t.Variant == where.V2rayaCore {
 

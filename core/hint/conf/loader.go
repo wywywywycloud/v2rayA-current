@@ -386,9 +386,11 @@ func injectMultiObservatory(coreConfig *xray_core.Config, mo *multiObsJSON) {
 		}
 		cfg.Observers = append(cfg.Observers, observer)
 	}
-	if len(cfg.Observers) == 0 {
+	if len(cfg.Observers) == 0 && len(mo.Observers) > 0 {
 		return
 	}
+	// An explicitly empty observatory satisfies native balancer fallback
+	// dependencies without starting probes when the service owns health checks.
 	coreConfig.App = append(coreConfig.App, serial.ToTypedMessage(cfg))
 }
 
