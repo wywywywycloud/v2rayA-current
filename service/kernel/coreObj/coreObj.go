@@ -386,6 +386,14 @@ type XHTTPRangeConfig struct {
 	To   int32 `json:"to,omitempty"`
 }
 
+// Xray accepts an integer or a range string, not a JSON object.
+func (r XHTTPRangeConfig) MarshalJSON() ([]byte, error) {
+	if r.From == r.To {
+		return json.Marshal(r.From)
+	}
+	return json.Marshal(fmt.Sprintf("%d-%d", r.From, r.To))
+}
+
 type XHTTPXmux struct {
 	MaxConcurrency   *XHTTPRangeConfig `json:"maxConcurrency,omitempty"`
 	MaxConnections   *XHTTPRangeConfig `json:"maxConnections,omitempty"`
