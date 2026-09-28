@@ -112,8 +112,8 @@ export default {
     custom: "Custom",
   },
   welcome: {
-    docker: "v2rayA service is running in Docker. Version: {version}",
-    default: "v2rayA service is running. Version: {version}",
+    docker: "x-Ray VPN service is running in Docker. Version: {version}",
+    default: "x-Ray VPN service is running. Version: {version}",
     newVersion: "New version available: {version}",
   },
   v2ray: {
@@ -138,7 +138,7 @@ export default {
     updateModeHelp: {
       disabled: "The subscription changes only when you update it manually.",
       onStart:
-        "Updates once whenever v2rayA starts and once immediately when you change the address or update policy.",
+        "Updates once whenever x-Ray VPN starts and once immediately when you change the address or update policy.",
       interval: "Updates on startup and then at the configured interval.",
       intervalFailsafe:
         "Updates on startup and at the regular interval. If every server becomes unavailable, retries at the failure interval until one works.",
@@ -274,15 +274,15 @@ export default {
       gfwlist:
         "Based on modified time of file which sometimes is after latest version online.",
       transparentProxy:
-        "If transparent proxy on, no extra configure needed and all TCP traffic will pass through the v2rayA. Providing proxy service to other computers and docker as the gateway should make option 'Share in LAN' on.",
+        "If transparent proxy on, no extra configure needed and all TCP traffic will pass through the x-Ray VPN. Providing proxy service to other computers and docker as the gateway should make option 'Share in LAN' on.",
       transparentType:
-        "★tproxy: supports UDP, but not docker. ★redirect: friendly for docker, but does not support UDP and needs local port 53 for DNS anti-pollution. ★tun: the core opens a TUN device and takes the default route; works on Linux, Windows and macOS, supports UDP, excludes v2rayA and the core by itself and lets you exclude other processes by name. On Windows and macOS, applications that query a LAN resolver directly still bypass it.",
+        "★tproxy: supports UDP, but not docker. ★redirect: friendly for docker, but does not support UDP and needs local port 53 for DNS anti-pollution. ★tun: the core opens a TUN device and takes the default route; works on Linux, Windows and macOS, supports UDP, excludes x-Ray VPN and the core by itself and lets you exclude other processes by name. On Windows and macOS, applications that query a LAN resolver directly still bypass it.",
       tproxyExcludedInterfaces:
         "Set the network interface prefixes that should not pass through the transparent proxy. Wildcard * is supported (automatically converted to + in iptables mode). For example: docker*, veth*, wg*, ppp*. Use commas to separate multiple prefixes. On OpenWrt, LAN bridges are included by default; adding br-* here excludes them.",
       tunAutoRoute:
-        "When enabled, v2rayA installs the routes and DNS settings itself. When disabled, you must provide setup/teardown scripts that configure routing yourself.",
+        "When enabled, x-Ray VPN installs the routes and DNS settings itself. When disabled, you must provide setup/teardown scripts that configure routing yourself.",
       tunExcludeProcesses:
-        "Process names whose traffic bypasses the proxy, one per line, e.g. chrome.exe or firefox. v2rayA and the core are always excluded. A process is identified by the executable name of the socket owner; a socket that closed before the lookup, or a port reused by another process, cannot be attributed. Their DNS queries are still answered by the core's DNS module.",
+        "Process names whose traffic bypasses the proxy, one per line, e.g. chrome.exe or firefox. x-Ray VPN and the core are always excluded. A process is identified by the executable name of the socket owner; a socket that closed before the lookup, or a port reused by another process, cannot be attributed. Their DNS queries are still answered by the core's DNS module.",
       pacMode: `Here you can set the splitting traffic rule of the rule port. By default, "Rule of Splitting Traffic" port is 20172 and HTTP protocol.`,
       tcpFastOpen:
         "Simplify TCP handshake process to speed up connection establishment. Risk of emphasizing characteristics of packets exists. It may cause failed to connect if your system does not support it.",
@@ -439,9 +439,14 @@ export default {
     v2rayInvalid:
       "geosite.dat, geoip.dat or v2raya_core may not be installed correctly",
     coreVersionMismatch:
-      "Core version mismatch: v2raya_core version must exactly match v2rayA version. {err}",
+      "Core version mismatch: v2raya_core version must exactly match x-Ray VPN version. {err}",
   },
   about: {
+    experimental: "Experimental edition based on v2rayA-resilient.",
+    fixes:
+      "Includes fixes for probe and DNS cancellation, duplicate probes, process cleanup, asset downloads, XHTTP uploads and REALITY startup validation.",
+    limitations:
+      "TLS session resumption and variable POST sizes remain off by default. Chrome 133 matching is partial; no current-browser equivalence or general CPU/RAM improvement is claimed.",
     intro:
       "A web client for its own Xray-based core with global transparent proxy on Linux, Windows and macOS.",
     protocols:
@@ -453,9 +458,9 @@ export default {
   },
   axios: {
     messages: {
-      optimizeBackend: "Change the v2rayA service address?",
+      optimizeBackend: "Change the x-Ray VPN service address?",
       noBackendFound:
-        "Cannot find v2rayA at {url}. Make sure v2rayA is running at this address.",
+        "Cannot find x-Ray VPN at {url}. Make sure x-Ray VPN is running at this address.",
       cannotCommunicate: [
         "Cannot communicate. If your service is running and ports open correctly, the reason may be that current browser does not allow https sites to access http resources, you can try using Chrome or switching to alternate http site.",
         "Cannot communicate. Firefox does not allow https sites to access http resources, you can try switching to alternate http sites.",
@@ -773,7 +778,7 @@ export default {
     CORE_START_FAILED: "Failed to start v2raya_core: {detail}",
     CORE_NOT_FOUND: "v2raya_core was not found.",
     CORE_VERSION_MISMATCH:
-      "v2raya_core version {core} does not match v2rayA version {app}.",
+      "v2raya_core version {core} does not match x-Ray VPN version {app}.",
     PORT_OCCUPIED: "Port {port} is already in use.",
     INVALID_PORT: "Port {port} is invalid.",
     PORT_DUPLICATE: "Port {port} is used more than once.",

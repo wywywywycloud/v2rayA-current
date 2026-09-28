@@ -87,7 +87,7 @@ replace anytls v0.0.12 => github.com/anytls/anytls-go v0.0.12
 
 replace github.com/daeuniverse/outbound => github.com/olicesx/outbound v0.0.0-sticky-ip.0.20260917223728-6a44445c9106
 
-// Local integration layout; source hashes are recorded in integration-lab manifests.
-replace github.com/xtls/xray-core => ../../xray-candidate
+// Experimental release forks, pinned to immutable revisions.
+replace github.com/xtls/xray-core => github.com/wywywywycloud/Xray-core v1.260327.1-0.20260928165923-9ef5632ee09d
 
-replace golang.org/x/net => ../../net-candidate
+replace golang.org/x/net => github.com/wywywywycloud/net v0.0.0-20260928004604-0db38890600a

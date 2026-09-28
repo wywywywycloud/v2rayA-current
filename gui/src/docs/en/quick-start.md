@@ -1,6 +1,6 @@
 # Quick start
 
-This page in the browser configures v2rayA and shows its state; the service runs as root (as an administrator on Windows; unprivileged with `--lite`) and starts `v2raya_core` itself.
+This page in the browser configures x-Ray VPN and shows its state; the service runs as root (as an administrator on Windows; unprivileged with `--lite`) and starts `v2raya_core` itself.
 
 ## Sign in
 
@@ -64,7 +64,7 @@ On macOS `Cmd` stands for `Ctrl`.
 Each subscription has its own update mode:
 
 - **Disabled:** update only when requested manually.
-- **On service start:** update once whenever v2rayA starts.
+- **On service start:** update once whenever x-Ray VPN starts.
 - **At an interval:** update on startup and then after the configured number of minutes.
 - **At an interval with fail-safe recovery:** use the regular schedule and also check the saved servers at the failure interval. When none works, refresh at that interval until at least one becomes available.
 
@@ -72,7 +72,7 @@ Failed or empty downloads keep the saved server list. A failure retry does not p
 
 On upgrade, the previous global **update on start** mode is assigned to every existing subscription as **On service start**. The previous interval mode becomes **At an interval** with the same interval converted from hours to minutes. Fail-safe recovery is never enabled during migration; select it explicitly where needed.
 
-An enabled schedule restarts immediately when the subscription address, update mode or intervals change. In particular, selecting **On service start** while v2rayA is running performs one update immediately, then waits until the next service start. Changing only the remarks does not reset the schedule.
+An enabled schedule restarts immediately when the subscription address, update mode or intervals change. In particular, selecting **On service start** while x-Ray VPN is running performs one update immediately, then waits until the next service start. Changing only the remarks does not reset the schedule.
 
 Manual imports, manual updates and scheduled updates follow **Mode when updating subscriptions**. The saved proxy/PAC route never changes silently. If proxy/PAC is selected while the main core is stopped, a manual import or update asks whether to bypass the proxy and download directly for that request only; declining cancels the request. Scheduled updates keep the configured route. Only a fail-safe recovery attempt after an all-server outage can retry directly if the configured download route fails. Every such bypass is logged; the network can see the subscription service address. This requires the separate **Ignore subscription download routing during recovery** switch, which defaults to off for new and upgraded subscriptions. With it off, recovery keeps retrying through the configured proxy/PAC. With it on, the exception applies only to the subscription download, not to other traffic.
 

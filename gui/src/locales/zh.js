@@ -108,8 +108,8 @@ export default {
     custom: "自定义",
   },
   welcome: {
-    docker: "v2rayA 服务端运行于 Docker，版本：{version}",
-    default: "v2rayA 服务端正在运行，版本：{version}",
+    docker: "x-Ray VPN 服务端运行于 Docker，版本：{version}",
+    default: "x-Ray VPN 服务端正在运行，版本：{version}",
     newVersion: "检测到新版本：{version}",
   },
   v2ray: {
@@ -134,7 +134,7 @@ export default {
     updateModeHelp: {
       disabled: "仅在手动更新时更改订阅。",
       onStart:
-        "每次 v2rayA 启动时更新一次；修改订阅地址或更新策略后也会立即更新一次。",
+        "每次 x-Ray VPN 启动时更新一次；修改订阅地址或更新策略后也会立即更新一次。",
       interval: "启动时更新一次，之后按设定的间隔更新。",
       intervalFailsafe:
         "启动时及按固定间隔更新。如果该订阅的所有服务器都不可用，则按故障间隔重试，直到至少一个恢复可用。",
@@ -268,15 +268,15 @@ export default {
       inboundSniffing: "嗅探入站域名，如不开启，可能导致部分域名分流错误",
       gfwlist: "该时间是指本地文件最后修改时间，因此可能会领先最新版本",
       transparentProxy:
-        "全局代理开启后，无需经过额外设置，任何TCP流量均会经过V2RayA。另外，如需作为网关使得连接本机的其他主机或docker也享受代理，请勾选“开启局域网共享”。",
+        "全局代理开启后，无需经过额外设置，任何TCP流量均会经过x-Ray VPN。另外，如需作为网关使得连接本机的其他主机或docker也享受代理，请勾选“开启局域网共享”。",
       transparentType:
-        "★tproxy: 支持udp，不支持docker。★redirect: docker友好，不支持udp，需要占用本地53端口以应对dns污染。★tun: 由核心打开 TUN 设备并接管默认路由；支持 Linux、Windows、macOS 与 UDP，自动排除 v2rayA 与核心自身，并可按进程名排除其他进程。Windows 与 macOS 上直接查询局域网 DNS 的应用仍会绕过它。",
+        "★tproxy: 支持udp，不支持docker。★redirect: docker友好，不支持udp，需要占用本地53端口以应对dns污染。★tun: 由核心打开 TUN 设备并接管默认路由；支持 Linux、Windows、macOS 与 UDP，自动排除 x-Ray VPN 与核心自身，并可按进程名排除其他进程。Windows 与 macOS 上直接查询局域网 DNS 的应用仍会绕过它。",
       tproxyExcludedInterfaces:
         "设置不经过透明代理的网卡前缀。支持通配符 * (iptables模式下会自动转换为 +)。例如: docker*, veth*, wg*, ppp*。多个前缀用逗号隔开。 OpenWrt 默认代理 LAN 网桥流量；在此添加 br-* 会排除这些网桥。",
       tunAutoRoute:
-        "开启时，v2rayA 自行安装路由与 DNS 设置。关闭时，需要提供自定义的启动/停止脚本手动配置路由。",
+        "开启时，x-Ray VPN 自行安装路由与 DNS 设置。关闭时，需要提供自定义的启动/停止脚本手动配置路由。",
       tunExcludeProcesses:
-        "流量直连的进程名，一行一个，例如：chrome.exe、firefox。v2rayA 与核心始终排除。按 socket 属主的可执行文件名识别；查找前已关闭的 socket 或被其他进程复用的端口无法归属。被排除进程的 DNS 查询仍由核心 DNS 模块回答。",
+        "流量直连的进程名，一行一个，例如：chrome.exe、firefox。x-Ray VPN 与核心始终排除。按 socket 属主的可执行文件名识别；查找前已关闭的 socket 或被其他进程复用的端口无法归属。被排除进程的 DNS 查询仍由核心 DNS 模块回答。",
       pacMode:
         "该选项设置规则分流端口所使用的路由模式。默认情况下规则分流端口为20172，HTTP协议。",
       tcpFastOpen:
@@ -429,9 +429,14 @@ export default {
     v2rayInvalid:
       "检测到 geosite.dat、geoip.dat 文件或 v2raya_core 可能未正确安装，请检查",
     coreVersionMismatch:
-      "核心版本不匹配：v2raya_core 的版本必须与 v2rayA 版本完全一致。{err}",
+      "核心版本不匹配：v2raya_core 的版本必须与 x-Ray VPN 版本完全一致。{err}",
   },
   about: {
+    experimental: "基于 v2rayA-resilient 的实验版本。",
+    fixes:
+      "包含探测与 DNS 取消、重复探测、进程清理、资源下载、XHTTP 上传和 REALITY 启动验证的修复。",
+    limitations:
+      "TLS 会话恢复和可变 POST 大小默认关闭。仅部分匹配 Chrome 133；不宣称与当前浏览器完全一致或普遍降低 CPU/内存使用。",
     intro:
       "自带 Xray 内核的 Web 客户端，在 Linux、Windows、macOS 上提供全局透明代理。",
     protocols:
@@ -443,8 +448,9 @@ export default {
   },
   axios: {
     messages: {
-      optimizeBackend: "是否修改 v2rayA 服务端地址？",
-      noBackendFound: "未在 {url} 检测到v2rayA服务端，请确定v2rayA正常运行",
+      optimizeBackend: "是否修改 x-Ray VPN 服务端地址？",
+      noBackendFound:
+        "未在 {url} 检测到x-Ray VPN服务端，请确定x-Ray VPN正常运行",
       cannotCommunicate: [
         "无法通信。如果您的服务端已正常运行，且端口正常开放，原因可能是当前浏览器不允许https站点访问http资源，您可以尝试切换为http备用站点。",
         "无法通信。火狐浏览器不允许https站点访问http资源，您可以换用Chrome浏览器或切换为http备用站点。",
@@ -579,8 +585,7 @@ export default {
   outbound: {
     autoAdd: "自动添加所有服务器",
     autoAddHelp: "添加代理列表和订阅中的所有服务器，包括不可用的服务器。",
-    autoAddDetails:
-      "更新成员不会测延迟、测速或启动检测核心。",
+    autoAddDetails: "更新成员不会测延迟、测速或启动检测核心。",
     updateMembers: "更新服务器列表",
     membersUpdated: "分组服务器列表已更新",
     membersUpdateFailed: "更新分组服务器列表失败：{message}",
@@ -611,12 +616,13 @@ export default {
     },
     strategyDetails: {
       fixed: "始终使用固定服务器，并禁用自动检查和自动填充。",
-      leastping: "测量所有服务器的 TCP 延迟，按延迟顺序逐个测速，找到首个合格服务器即停止。",
+      leastping:
+        "测量所有服务器的 TCP 延迟，按延迟顺序逐个测速，找到首个合格服务器即停止。",
       keepcurrent:
         "每个设定的检测周期只检查当前服务器及其速度。URL 失败或速度低于 100 KiB/s 时，按 TCP 延迟和速度选择替代服务器。",
-      roundrobin: "逐个检查成员，在通过 URL 和速度检测的服务器之间轮流分配新连接。",
-      random:
-        "测量延迟后随机排列可达服务器，逐个测速，直到找到合格服务器。",
+      roundrobin:
+        "逐个检查成员，在通过 URL 和速度检测的服务器之间轮流分配新连接。",
+      random: "测量延迟后随机排列可达服务器，逐个测速，直到找到合格服务器。",
     },
   },
   proxyGroup: {
@@ -750,7 +756,7 @@ export default {
     CORE_START_FAILED: "无法启动 v2raya_core：{detail}",
     CORE_NOT_FOUND: "未找到 v2raya_core。",
     CORE_VERSION_MISMATCH:
-      "v2raya_core 版本 {core} 与 v2rayA 版本 {app} 不一致。",
+      "v2raya_core 版本 {core} 与 x-Ray VPN 版本 {app} 不一致。",
     PORT_OCCUPIED: "端口 {port} 已被占用。",
     INVALID_PORT: "端口 {port} 无效。",
     PORT_DUPLICATE: "端口 {port} 重复使用。",

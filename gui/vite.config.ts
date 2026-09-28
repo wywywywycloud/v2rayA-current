@@ -45,8 +45,8 @@ export default defineConfig(({ mode }) => ({
     VitePWA({
       registerType: "autoUpdate",
       manifest: {
-        name: "v2rayA",
-        short_name: "v2rayA",
+        name: "x-Ray VPN",
+        short_name: "x-Ray VPN",
         description: en.about.intro,
         display: "standalone",
         start_url: "./",

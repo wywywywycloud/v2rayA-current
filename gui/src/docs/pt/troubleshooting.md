@@ -20,7 +20,7 @@ Consulte primeiro o registro do serviço: `/var/log/v2raya/v2raya.log` quando ex
 
 ## Dados de regras
 
-Ao iniciar, depois de localizar o núcleo, o v2rayA baixa do GitHub o arquivo `geoip.dat` ou `geosite.dat` que estiver ausente e encerra sua execução se o download falhar. Copie os arquivos manualmente para o diretório de dados de regras (veja a seção de parâmetros) ou instale um pacote que os inclua.
+Ao iniciar, depois de localizar o núcleo, o x-Ray VPN baixa do GitHub o arquivo `geoip.dat` ou `geosite.dat` que estiver ausente e encerra sua execução se o download falhar. Copie os arquivos manualmente para o diretório de dados de regras (veja a seção de parâmetros) ou instale um pacote que os inclua.
 
 ## Após uma atualização
 

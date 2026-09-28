@@ -1,8 +1,16 @@
 <div align="center">
 
-<img src="gui/public/static/v2raya-icon.svg" width="96" alt="v2rayA">
+<img src="gui/public/static/v2raya-icon.svg" width="96" alt="x-Ray VPN">
 
-# v2rayA
+# x-Ray VPN
+
+Experimental edition based on v2rayA-resilient.
+
+Includes fixes for probe and DNS cancellation, duplicate probes, process cleanup, asset downloads, XHTTP uploads and REALITY startup validation.
+
+TLS session resumption and variable POST sizes remain off by default. Chrome 133 matching is partial; no current-browser equivalence or general CPU/RAM improvement is claimed.
+
+[Experimental release notes](EXPERIMENTAL.md)
 
 **A web client for its own Xray-based core, with transparent proxy on Linux, Windows and macOS.**
 
@@ -12,7 +20,7 @@ English · [简体中文](README_zh.md) · [Русский](README_ru.md)
 
 </div>
 
-v2rayA runs as a service and is used from a browser, on the machine itself or on a router or NAS. It imports subscriptions and share links for VMess, VLESS, Shadowsocks, Trojan, Hysteria2, TUIC, [Juicity](https://github.com/juicity), AnyTLS, WireGuard, SOCKS5 and HTTP(S), groups nodes and selects the member with the lowest measured latency or a pinned one, and splits traffic with rules written in RoutingA. ShadowsocksR is not supported.
+x-Ray VPN runs as a service and is used from a browser, on the machine itself or on a router or NAS. It imports subscriptions and share links for VMess, VLESS, Shadowsocks, Trojan, Hysteria2, TUIC, [Juicity](https://github.com/juicity), AnyTLS, WireGuard, SOCKS5 and HTTP(S), groups nodes and selects the member with the lowest measured latency or a pinned one, and splits traffic with rules written in RoutingA. ShadowsocksR is not supported.
 
 ## Requirements
 
@@ -27,172 +35,9 @@ v2rayA runs as a service and is used from a browser, on the machine itself or on
 
 ## Install
 
-The packages below install `v2raya` and `v2raya_core` together with a service definition. Enable the service with the command shown for the platform.
+The experimental target is OpenWrt **24.10.4 ARM64** (`aarch64_cortex-a53`). Use the matching three IPKs attached to the [experimental release](https://github.com/wywywywycloud/v2rayA-resilient/releases/tag/experimental-2026.09.28.1). See [reproducible build and packaging instructions](install/openwrt-experimental/README.md) and that release’s validation notes for the actual artifact checks. Install or roll back service and core together.
 
-<details>
-<summary><strong>Debian, Ubuntu and other APT distributions</strong></summary>
-
-The packages come from the [Dae Universe repository](https://github.com/daeuniverse/repo-for-linux).
-
-```sh
-sudo apt update
-sudo apt install curl
-```
-
-APT 3.0 or later:
-
-```sh
-sudo curl -fsSL -o /etc/apt/sources.list.d/daeuniverse.sources https://daeuniverse.pages.dev/daeuniverse.sources
-```
-
-APT older than 3.0:
-
-```sh
-sudo curl -fsSL -o /etc/apt/sources.list.d/daeuniverse.list https://daeuniverse.pages.dev/daeuniverse.list
-```
-
-Then the key and the package:
-
-```sh
-sudo curl -fsSL -o /usr/share/keyrings/daeuniverse-archive-goose.gpg https://daeuniverse.pages.dev/daeuniverse-archive-goose.gpg
-sudo apt update
-sudo apt install v2raya
-sudo systemctl enable --now v2raya
-```
-
-Change the unit with `sudo systemctl edit --full v2raya.service`; an edit of the installed file is overwritten by the next upgrade.
-
-</details>
-
-<details>
-<summary><strong>Fedora, RHEL, openSUSE and other RPM distributions</strong></summary>
-
-Fedora, RHEL and derivatives:
-
-```sh
-sudo curl -fsSL -o /etc/yum.repos.d/daeuniverse.repo https://daeuniverse.pages.dev/daeuniverse.repo
-sudo dnf install v2raya
-```
-
-openSUSE:
-
-```sh
-sudo curl -fsSL -o /etc/zypp/repos.d/daeuniverse.repo https://daeuniverse.pages.dev/daeuniverse.repo
-sudo zypper install v2raya
-```
-
-Then:
-
-```sh
-sudo systemctl enable --now v2raya
-```
-
-</details>
-
-<details>
-<summary><strong>Arch Linux</strong></summary>
-
-`v2raya` builds from source, `v2raya-bin` uses the release binaries; both are in the AUR. The release page also carries `installer_archlinux_<arch>_<version>.pkg.tar.zst` for `pacman -U`.
-
-```sh
-paru -S v2raya-bin
-sudo systemctl enable --now v2raya
-```
-
-</details>
-
-<details>
-<summary><strong>Gentoo, Alpine and other OpenRC systems</strong></summary>
-
-On Gentoo, install from the [gentoo-zh](https://github.com/gentoo-zh/overlay) overlay, then enable the service:
-
-```sh
-sudo emerge net-proxy/v2rayA
-sudo rc-update add v2raya default
-sudo rc-service v2raya start
-```
-
-Elsewhere, download the two binaries for the architecture from the [releases](https://github.com/v2rayA/v2rayA/releases) and use the OpenRC files from [`install/universal/`](install/universal/). Run this from a checkout of the repository, with `VERSION` set to the release number without the leading `v`; the example is for x64:
-
-```sh
-sudo install -m755 "v2raya_linux_x64_${VERSION}" /usr/bin/v2raya
-sudo install -m755 "v2raya_core_linux_x64_${VERSION}" /usr/bin/v2raya_core
-sudo install -m755 install/universal/v2raya.initd /etc/init.d/v2raya
-sudo install -m644 install/universal/v2raya.confd /etc/conf.d/v2raya
-sudo rc-update add v2raya default
-sudo rc-service v2raya start
-```
-
-</details>
-
-<details>
-<summary><strong>Docker</strong></summary>
-
-The image is `ghcr.io/v2raya/v2raya` (also `mzz2017/v2raya` on Docker Hub). This example is for a Linux host and gives the container the host network and privileges, which transparent proxy needs:
-
-```sh
-docker run -d --restart=always --privileged --network=host --name v2raya \
-  -e V2RAYA_LOG_FILE=/tmp/v2raya.log \
-  -v /lib/modules:/lib/modules:ro \
-  -v /etc/resolv.conf:/etc/resolv.conf \
-  -v /etc/v2raya:/etc/v2raya \
-  ghcr.io/v2raya/v2raya
-```
-
-With bridge networking instead, publish port 2017 and the inbound ports you use, and turn on port sharing in the settings; the inbounds listen on the container's loopback otherwise. Transparent proxy is not available in that setup.
-
-</details>
-
-<details>
-<summary><strong>Windows</strong></summary>
-
-`installer_windows_inno_x64_<version>.exe` (or `arm64`) from the [releases](https://github.com/v2rayA/v2rayA/releases) installs both binaries and registers a service. The same installer is behind `winget install --id v2rayA.v2rayA` and the [scoop bucket](https://github.com/v2rayA/v2raya-scoop) (`scoop bucket add v2raya https://github.com/v2rayA/v2raya-scoop && scoop install v2raya-np`).
-
-</details>
-
-<details>
-<summary><strong>macOS</strong></summary>
-
-The [tap](https://github.com/v2rayA/homebrew-v2raya) installs both binaries. Started as root the service has the `tun` transparent proxy; started as you it runs in lite mode with the system proxy:
-
-```sh
-brew tap v2raya/v2raya
-brew install v2raya/v2raya/v2raya
-sudo brew services start v2raya   # root: tun
-brew services start v2raya        # you: system proxy
-```
-
-A service started with `sudo` is stopped with `sudo brew services stop v2raya`, and Homebrew warns that the upgrade or uninstall of a root-started formula needs `sudo rm` of the paths it names.
-
-</details>
-
-<details>
-<summary><strong>OpenWrt</strong></summary>
-
-The signed [v2rayA Resilient OpenWrt distribution](https://github.com/wywywywycloud/v2raya-openwrt-current/blob/release/resilient-openwrt-24.10/RESILIENT-INSTALL.md) supports `aarch64_cortex-a53` routers running OpenWrt **24.10.0 through 24.10.8**. All nine releases passed a clean feed installation and service, core, embedded-GUI and LuCI startup test. OpenWrt 24.10.4 and 24.10.5 additionally passed the complete functional, migration, failure-recovery and reboot test suites.
-
-The [r17 signed-feed VM matrix](docs/testing/openwrt-24.10-feed-matrix.md) records the per-release checks and their hardware limits. The current r17 package has not been verified on a physical router.
-
-OpenWrt 25.12 is not supported by this distribution. It uses APK packages and requires a separately built and signed native repository. End-of-life OpenWrt series are not listed as supported.
-
-The upstream [v2raya-openwrt](https://github.com/v2rayA/v2raya-openwrt) and official OpenWrt package feeds currently package a separate release line. Follow the Resilient installation document above when installing this branch.
-
-</details>
-
-<details>
-<summary><strong>Other Linux, without a package</strong></summary>
-
-Download `v2raya_linux_<arch>_<version>` and `v2raya_core_linux_<arch>_<version>` from the [releases](https://github.com/v2rayA/v2rayA/releases) (`x86`, `x64`, `arm64`, `armv7`, `riscv64`, `loongarch64`, `mips32`, `mips32le`, `mips64`, `mips64le`), check them against the `.sha256.txt` next to each, and install both into `/usr/bin`. With systemd:
-
-```sh
-sudo install -m644 install/universal/v2raya.service /etc/systemd/system/v2raya.service
-sudo systemctl daemon-reload
-sudo systemctl enable --now v2raya
-```
-
-With OpenRC, use the files from the section above. There is also a [snap](https://snapcraft.io/v2raya) maintained separately.
-
-</details>
+Upstream distribution packages and the earlier signed Resilient feed are different builds; their installation matrices do not validate this experimental release.
 
 ## First run
 
@@ -214,7 +59,7 @@ Once the core runs, point an application at SOCKS5 `127.0.0.1:20170` or HTTP `12
 
 The system proxy modes set the desktop's proxy settings and cover applications that honour them. The other modes intercept traffic.
 
-With `tun`, the core opens a TUN device and assigns its address; with automatic routing on (the default), v2rayA installs the routes and the DNS setting, otherwise your own script does. The core's own connections, the direct outbound and the DNS module's upstream queries never enter the TUN (by socket mark on Linux, by binding to the physical interface on Windows and macOS). Plain DNS on port 53 that reaches the TUN is answered by the core's DNS module; encrypted DNS is not intercepted. v2rayA and the core are always excluded, and other processes can be excluded by executable name in the settings. More specific connected and static routes bypass the TUN.
+With `tun`, the core opens a TUN device and assigns its address; with automatic routing on (the default), x-Ray VPN installs the routes and the DNS setting, otherwise your own script does. The core's own connections, the direct outbound and the DNS module's upstream queries never enter the TUN (by socket mark on Linux, by binding to the physical interface on Windows and macOS). Plain DNS on port 53 that reaches the TUN is answered by the core's DNS module; encrypted DNS is not intercepted. x-Ray VPN and the core are always excluded, and other processes can be excluded by executable name in the settings. More specific connected and static routes bypass the TUN.
 
 Known limitation: on Windows and macOS an application that queries a LAN resolver directly still bypasses the TUN. The system resolver is covered: Windows points it at the TUN gateway, macOS at the core's listener on `127.0.0.1`, which needs port 53 free.
 
@@ -232,7 +77,7 @@ Stop the service and back up the configuration directory before upgrading. Upgra
 
 ## Support
 
-Ask questions in the [discussions](https://github.com/v2rayA/v2rayA/discussions) and report bugs in the [issues](https://github.com/v2rayA/v2rayA/issues).
+Ask questions in the [discussions](https://github.com/wywywywycloud/v2rayA-resilient/discussions) and report bugs in the [issues](https://github.com/wywywywycloud/v2rayA-resilient/issues).
 
 Do not use this project for anything illegal.
 

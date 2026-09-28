@@ -1,8 +1,16 @@
 <div align="center">
 
-<img src="gui/public/static/v2raya-icon.svg" width="96" alt="v2rayA">
+<img src="gui/public/static/v2raya-icon.svg" width="96" alt="x-Ray VPN">
 
-# v2rayA
+# x-Ray VPN
+
+基于 v2rayA-resilient 的实验版本。
+
+包含探测与 DNS 取消、重复探测、进程清理、资源下载、XHTTP 上传和 REALITY 启动验证的修复。
+
+TLS 会话恢复和可变 POST 大小默认关闭。仅部分匹配 Chrome 133；不宣称与当前浏览器完全一致或普遍降低 CPU/内存使用。
+
+[Experimental release notes](EXPERIMENTAL.md)
 
 **基于自带 Xray 内核的 Web 客户端，在 Linux、Windows 与 macOS 上提供透明代理。**
 
@@ -12,7 +20,7 @@
 
 </div>
 
-v2rayA 以服务形式运行，通过浏览器操作，可部署在本机、路由器或 NAS 上。它导入 VMess、VLESS、Shadowsocks、Trojan、Hysteria2、TUIC、[Juicity](https://github.com/juicity)、AnyTLS、WireGuard、SOCKS5 与 HTTP(S) 的订阅和分享链接。节点编成组后，由实测延迟最低的成员或固定的成员出站，分流由 RoutingA 规则决定。不支持 ShadowsocksR。
+x-Ray VPN 以服务形式运行，通过浏览器操作，可部署在本机、路由器或 NAS 上。它导入 VMess、VLESS、Shadowsocks、Trojan、Hysteria2、TUIC、[Juicity](https://github.com/juicity)、AnyTLS、WireGuard、SOCKS5 与 HTTP(S) 的订阅和分享链接。节点编成组后，由实测延迟最低的成员或固定的成员出站，分流由 RoutingA 规则决定。不支持 ShadowsocksR。
 
 ## 运行环境
 
@@ -27,166 +35,9 @@ v2rayA 以服务形式运行，通过浏览器操作，可部署在本机、路�
 
 ## 安装
 
-下列软件包同时安装 `v2raya`、`v2raya_core` 与服务定义。安装后按各平台给出的命令启用服务。
+实验版目标平台为 OpenWrt **24.10.4 ARM64**（`aarch64_cortex-a53`）。请使用[实验版本](https://github.com/wywywywycloud/v2rayA-resilient/releases/tag/experimental-2026.09.28.1)中配套的三个 IPK。参阅[可复现构建与打包说明](install/openwrt-experimental/README.md)及该版本的验证记录。服务与内核必须一起安装或回退。
 
-<details>
-<summary><strong>Debian、Ubuntu 与其他 APT 发行版</strong></summary>
-
-软件包由 [Dae Universe 软件源](https://github.com/daeuniverse/repo-for-linux)提供。
-
-```sh
-sudo apt update
-sudo apt install curl
-```
-
-APT 3.0 及以上：
-
-```sh
-sudo curl -fsSL -o /etc/apt/sources.list.d/daeuniverse.sources https://daeuniverse.pages.dev/daeuniverse.sources
-```
-
-APT 3.0 以下：
-
-```sh
-sudo curl -fsSL -o /etc/apt/sources.list.d/daeuniverse.list https://daeuniverse.pages.dev/daeuniverse.list
-```
-
-然后导入密钥并安装：
-
-```sh
-sudo curl -fsSL -o /usr/share/keyrings/daeuniverse-archive-goose.gpg https://daeuniverse.pages.dev/daeuniverse-archive-goose.gpg
-sudo apt update
-sudo apt install v2raya
-sudo systemctl enable --now v2raya
-```
-
-修改服务单元请用 `sudo systemctl edit --full v2raya.service`；直接修改已安装的文件会在下次升级时被覆盖。
-
-</details>
-
-<details>
-<summary><strong>Fedora、RHEL、openSUSE 与其他 RPM 发行版</strong></summary>
-
-Fedora、RHEL 及其衍生版：
-
-```sh
-sudo curl -fsSL -o /etc/yum.repos.d/daeuniverse.repo https://daeuniverse.pages.dev/daeuniverse.repo
-sudo dnf install v2raya
-```
-
-openSUSE：
-
-```sh
-sudo curl -fsSL -o /etc/zypp/repos.d/daeuniverse.repo https://daeuniverse.pages.dev/daeuniverse.repo
-sudo zypper install v2raya
-```
-
-然后启用服务：
-
-```sh
-sudo systemctl enable --now v2raya
-```
-
-</details>
-
-<details>
-<summary><strong>Arch Linux</strong></summary>
-
-AUR 中的 `v2raya` 从源码构建，`v2raya-bin` 使用发布的二进制文件。发布页也提供 `installer_archlinux_<arch>_<version>.pkg.tar.zst`，可用 `pacman -U` 安装。
-
-```sh
-paru -S v2raya-bin
-sudo systemctl enable --now v2raya
-```
-
-</details>
-
-<details>
-<summary><strong>Gentoo、Alpine 与其他 OpenRC 系统</strong></summary>
-
-在 Gentoo 上，从 [gentoo-zh](https://github.com/gentoo-zh/overlay) overlay 安装，再启用服务：
-
-```sh
-sudo emerge net-proxy/v2rayA
-sudo rc-update add v2raya default
-sudo rc-service v2raya start
-```
-
-其他系统从[发布页](https://github.com/v2rayA/v2rayA/releases)下载对应架构的两个二进制文件，并使用 [`install/universal/`](install/universal/) 中的 OpenRC 文件。以下命令在仓库检出目录中执行，`VERSION` 为不带前缀 `v` 的版本号，示例为 x64：
-
-```sh
-sudo install -m755 "v2raya_linux_x64_${VERSION}" /usr/bin/v2raya
-sudo install -m755 "v2raya_core_linux_x64_${VERSION}" /usr/bin/v2raya_core
-sudo install -m755 install/universal/v2raya.initd /etc/init.d/v2raya
-sudo install -m644 install/universal/v2raya.confd /etc/conf.d/v2raya
-sudo rc-update add v2raya default
-sudo rc-service v2raya start
-```
-
-</details>
-
-<details>
-<summary><strong>Docker</strong></summary>
-
-镜像为 `ghcr.io/v2raya/v2raya`，Docker Hub 上是 `mzz2017/v2raya`。以下示例针对 Linux 宿主机，赋予容器宿主机网络与特权，透明代理需要这两项：
-
-```sh
-docker run -d --restart=always --privileged --network=host --name v2raya \
-  -e V2RAYA_LOG_FILE=/tmp/v2raya.log \
-  -v /lib/modules:/lib/modules:ro \
-  -v /etc/resolv.conf:/etc/resolv.conf \
-  -v /etc/v2raya:/etc/v2raya \
-  ghcr.io/v2raya/v2raya
-```
-
-改用桥接网络时，需要映射 2017 端口和使用的入站端口，并在设置中开启端口共享，否则入站只监听容器的回环地址。这种方式不提供透明代理。
-
-</details>
-
-<details>
-<summary><strong>Windows</strong></summary>
-
-[发布页](https://github.com/v2rayA/v2rayA/releases)的 `installer_windows_inno_x64_<version>.exe`（或 `arm64`）安装两个二进制文件并注册服务。`winget install --id v2rayA.v2rayA` 与 [scoop bucket](https://github.com/v2rayA/v2raya-scoop)（`scoop bucket add v2raya https://github.com/v2rayA/v2raya-scoop && scoop install v2raya-np`）使用同一个安装程序。
-
-</details>
-
-<details>
-<summary><strong>macOS</strong></summary>
-
-[tap](https://github.com/v2rayA/homebrew-v2raya) 安装两个二进制文件。以 root 启动的服务提供 `tun` 透明代理，以当前用户启动的服务运行在 lite 模式，只提供系统代理：
-
-```sh
-brew tap v2raya/v2raya
-brew install v2raya/v2raya/v2raya
-sudo brew services start v2raya   # root：tun
-brew services start v2raya        # 当前用户：系统代理
-```
-
-用 `sudo` 启动的服务要用 `sudo brew services stop v2raya` 停止；Homebrew 会提示，以 root 启动过的 formula 在升级或卸载时需要 `sudo rm` 它列出的路径。
-
-</details>
-
-<details>
-<summary><strong>OpenWrt</strong></summary>
-
-[v2raya-openwrt](https://github.com/v2rayA/v2raya-openwrt) 软件源与官方 packages 源目前打包的是 2.2.7.x，搭配独立的 `xray-core`，不是本文描述的版本。在它们更新之前，按下一节的方式手动安装 `mips32`、`mips32le`、`arm64` 或 `x64` 的发布二进制文件，并自行编写 init 脚本。
-
-</details>
-
-<details>
-<summary><strong>其他 Linux，不使用软件包</strong></summary>
-
-从[发布页](https://github.com/v2rayA/v2rayA/releases)下载 `v2raya_linux_<arch>_<version>` 与 `v2raya_core_linux_<arch>_<version>`（`x86`、`x64`、`arm64`、`armv7`、`riscv64`、`loongarch64`、`mips32`、`mips32le`、`mips64`、`mips64le`），用同名的 `.sha256.txt` 校验，两者都安装到 `/usr/bin`。使用 systemd 时：
-
-```sh
-sudo install -m644 install/universal/v2raya.service /etc/systemd/system/v2raya.service
-sudo systemctl daemon-reload
-sudo systemctl enable --now v2raya
-```
-
-使用 OpenRC 时，参照上一节的文件。另有单独维护的 [snap](https://snapcraft.io/v2raya)。
-
-</details>
+上游发行包和之前签名的 Resilient 软件源属于其他构建；其安装测试矩阵不能证明本实验版本已经通过相同测试。
 
 ## 首次运行
 
@@ -208,7 +59,7 @@ sudo systemctl enable --now v2raya
 
 系统代理模式修改桌面的代理设置，只覆盖遵守该设置的应用；其他模式拦截流量。
 
-`tun` 模式下，内核打开 TUN 设备并配置地址；自动路由（默认开启）时由 v2rayA 安装路由和 DNS 设置，否则由用户自己的脚本完成。内核自己的连接、direct 出站与 DNS 模块的上游查询不会进入 TUN（Linux 通过套接字标记，Windows 与 macOS 通过绑定物理网卡）。到达 TUN 的 53 端口明文 DNS 由内核的 DNS 模块回答，加密 DNS 不被拦截。v2rayA 与内核始终被排除，其他进程可在设置里按可执行文件名排除。更精确的直连路由与静态路由不经过 TUN。
+`tun` 模式下，内核打开 TUN 设备并配置地址；自动路由（默认开启）时由 x-Ray VPN 安装路由和 DNS 设置，否则由用户自己的脚本完成。内核自己的连接、direct 出站与 DNS 模块的上游查询不会进入 TUN（Linux 通过套接字标记，Windows 与 macOS 通过绑定物理网卡）。到达 TUN 的 53 端口明文 DNS 由内核的 DNS 模块回答，加密 DNS 不被拦截。x-Ray VPN 与内核始终被排除，其他进程可在设置里按可执行文件名排除。更精确的直连路由与静态路由不经过 TUN。
 
 已知限制：Windows 与 macOS 上直接向局域网 DNS 查询的应用仍会绕过 TUN。系统解析器不受影响：Windows 指向 TUN 网关，macOS 指向内核在 `127.0.0.1` 上的监听，后者要求 53 端口空闲。
 
@@ -226,7 +77,7 @@ SQLite 数据库 `v2raya.db` 与生成的内核配置位于配置目录：Linux 
 
 ## 支持
 
-问题请到 [Discussions](https://github.com/v2rayA/v2rayA/discussions) 提问，缺陷请到 [Issues](https://github.com/v2rayA/v2rayA/issues) 报告。
+问题请到 [Discussions](https://github.com/wywywywycloud/v2rayA-resilient/discussions) 提问，缺陷请到 [Issues](https://github.com/wywywywycloud/v2rayA-resilient/issues) 报告。
 
 不要将本项目用于不合法用途。
 

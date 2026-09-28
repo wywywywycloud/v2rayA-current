@@ -17,7 +17,7 @@ Com o proxy transparente ativado, o tráfego chega ao núcleo sem nenhuma config
 | ---------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
 | `redirect`       | Linux                                                              | `REDIRECT` do iptables/nftables; apenas TCP, além de DNS na porta 53 redirecionado ao módulo DNS do núcleo (porta 52353) |
 | `tproxy`         | Linux                                                              | `TPROXY` do iptables/nftables; TCP e UDP                                                                                 |
-| `tun`            | Linux, Windows, macOS                                              | o núcleo abre um dispositivo TUN; TCP e UDP; exclui o v2rayA e o próprio núcleo automaticamente                          |
+| `tun`            | Linux, Windows, macOS                                              | o núcleo abre um dispositivo TUN; TCP e UDP; exclui o x-Ray VPN e o próprio núcleo automaticamente                          |
 | Proxy do sistema | Windows; Linux e macOS quando não é executado como root (`--lite`) | configura o proxy do ambiente gráfico (GNOME e KDE no Linux); abrange apenas os aplicativos que as respeitam             |
 
 `redirect` e `tproxy` exigem root e `iptables` ou `nftables`; `tun` exige `/dev/net/tun` e `ip` no Linux e privilégios de administrador no Windows e no macOS.
@@ -28,9 +28,9 @@ Com o proxy transparente ativado, o tráfego chega ao núcleo sem nenhuma config
 
 ## TUN
 
-O núcleo cria o dispositivo TUN e atribui seu endereço. Com **Rota automática** ativada, o v2rayA instala as rotas e direciona o resolvedor do sistema para o núcleo; com ela desativada, os scripts de configuração e remoção em **Configurar script de rota** fazem isso.
+O núcleo cria o dispositivo TUN e atribui seu endereço. Com **Rota automática** ativada, o x-Ray VPN instala as rotas e direciona o resolvedor do sistema para o núcleo; com ela desativada, os scripts de configuração e remoção em **Configurar script de rota** fazem isso.
 
-Nunca entram no TUN: as conexões do próprio núcleo, a saída `direct` e as consultas do módulo DNS aos servidores upstream (por marca de socket no Linux, por vinculação à interface física no Windows e no macOS). O v2rayA e o núcleo são sempre excluídos; **Processos excluídos do TUN** exclui outros pelo nome do executável, um por linha, para conexões cujo processo responsável pode ser identificado; o DNS desses processos ainda vai para o módulo DNS do núcleo. Rotas mais específicas que a padrão (redes conectadas, rotas estáticas) também não passam pelo TUN.
+Nunca entram no TUN: as conexões do próprio núcleo, a saída `direct` e as consultas do módulo DNS aos servidores upstream (por marca de socket no Linux, por vinculação à interface física no Windows e no macOS). O x-Ray VPN e o núcleo são sempre excluídos; **Processos excluídos do TUN** exclui outros pelo nome do executável, um por linha, para conexões cujo processo responsável pode ser identificado; o DNS desses processos ainda vai para o módulo DNS do núcleo. Rotas mais específicas que a padrão (redes conectadas, rotas estáticas) também não passam pelo TUN.
 
 O DNS sem criptografia na porta 53 que chega ao TUN é respondido pelo módulo DNS do núcleo de acordo com as regras de DNS; o DNS criptografado não é interceptado. No Windows, o resolvedor do sistema é direcionado para o gateway do TUN; no macOS, para o serviço do núcleo que escuta em `127.0.0.1`, que precisa da porta 53 livre.
 

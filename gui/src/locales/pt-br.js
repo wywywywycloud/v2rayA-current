@@ -112,8 +112,8 @@ export default {
     custom: "Personalizada",
   },
   welcome: {
-    docker: "O serviço v2rayA está em execução no Docker. Versão: {version}",
-    default: "O serviço v2rayA está em execução. Versão: {version}",
+    docker: "O serviço x-Ray VPN está em execução no Docker. Versão: {version}",
+    default: "O serviço x-Ray VPN está em execução. Versão: {version}",
     newVersion: "Nova versão disponível: {version}",
   },
   v2ray: {
@@ -138,7 +138,7 @@ export default {
     updateModeHelp: {
       disabled: "A assinatura muda apenas quando você a atualiza manualmente.",
       onStart:
-        "Atualiza uma vez a cada início do v2rayA e imediatamente ao alterar o endereço ou a política de atualização.",
+        "Atualiza uma vez a cada início do x-Ray VPN e imediatamente ao alterar o endereço ou a política de atualização.",
       interval: "Atualiza ao iniciar e depois no intervalo configurado.",
       intervalFailsafe:
         "Atualiza ao iniciar e no intervalo regular. Se todos os servidores da assinatura ficarem indisponíveis, repete no intervalo de falha até que um funcione.",
@@ -280,15 +280,15 @@ export default {
       gfwlist:
         "Baseia-se na data de modificação do arquivo, que às vezes é posterior à versão mais recente online.",
       transparentProxy:
-        "Com o proxy transparente ativado, nenhuma configuração extra é necessária e todo o tráfego TCP passará pelo v2rayA. Para fornecer proxy a outros computadores e ao Docker pelo gateway, ative a opção 'Compartilhar na LAN'.",
+        "Com o proxy transparente ativado, nenhuma configuração extra é necessária e todo o tráfego TCP passará pelo x-Ray VPN. Para fornecer proxy a outros computadores e ao Docker pelo gateway, ative a opção 'Compartilhar na LAN'.",
       transparentType:
-        "★tproxy: suporta UDP, mas não Docker. ★redirect: compatível com Docker, mas não suporta UDP e precisa ocupar a porta local 53 para evitar a poluição do DNS. ★tun: o núcleo abre um dispositivo TUN e assume a rota padrão; funciona em Linux, Windows e macOS, suporta UDP, exclui o v2rayA e o núcleo automaticamente e permite excluir outros processos pelo nome. No Windows e no macOS, aplicativos que consultam diretamente um resolvedor da rede local ainda o ignoram.",
+        "★tproxy: suporta UDP, mas não Docker. ★redirect: compatível com Docker, mas não suporta UDP e precisa ocupar a porta local 53 para evitar a poluição do DNS. ★tun: o núcleo abre um dispositivo TUN e assume a rota padrão; funciona em Linux, Windows e macOS, suporta UDP, exclui o x-Ray VPN e o núcleo automaticamente e permite excluir outros processos pelo nome. No Windows e no macOS, aplicativos que consultam diretamente um resolvedor da rede local ainda o ignoram.",
       tproxyExcludedInterfaces:
         "Defina os prefixos das interfaces de rede que não devem passar pelo proxy transparente. O curinga * é aceito (convertido automaticamente em + no modo iptables). Por exemplo: docker*, veth*, wg*, ppp*. Separe vários prefixos com vírgulas. No OpenWrt, as pontes LAN passam pelo proxy por padrão; adicionar br-* aqui as exclui.",
       tunAutoRoute:
-        "Quando ativado, o v2rayA instala as rotas e as configurações de DNS por conta própria. Quando desativado, você deverá fornecer scripts de configuração e remoção que configurem o roteamento.",
+        "Quando ativado, o x-Ray VPN instala as rotas e as configurações de DNS por conta própria. Quando desativado, você deverá fornecer scripts de configuração e remoção que configurem o roteamento.",
       tunExcludeProcesses:
-        "Nomes de processos cujo tráfego não passa pelo proxy, um por linha, por exemplo chrome.exe ou firefox. O v2rayA e o núcleo são sempre excluídos. O processo é identificado pelo nome do executável dono do socket; um socket fechado antes da consulta ou uma porta reutilizada por outro processo não podem ser atribuídos. As consultas DNS desses processos continuam sendo respondidas pelo módulo DNS do núcleo.",
+        "Nomes de processos cujo tráfego não passa pelo proxy, um por linha, por exemplo chrome.exe ou firefox. O x-Ray VPN e o núcleo são sempre excluídos. O processo é identificado pelo nome do executável dono do socket; um socket fechado antes da consulta ou uma porta reutilizada por outro processo não podem ser atribuídos. As consultas DNS desses processos continuam sendo respondidas pelo módulo DNS do núcleo.",
       pacMode: `Aqui você pode definir a regra de divisão de tráfego da porta de regras. Por padrão, a porta da "Regra de divisão de tráfego" é 20172 e usa o protocolo HTTP.`,
       tcpFastOpen:
         "Simplifica o handshake TCP para acelerar o estabelecimento da conexão. Isso pode destacar as características dos pacotes e causar falha na conexão se o sistema não for compatível.",
@@ -317,7 +317,7 @@ export default {
       "Falha ao salvar as configurações de endereço e porta: {message}",
     messages: [
       "O endereço padrão do serviço, 0.0.0.0:2017, pode ser alterado definindo a variável de ambiente <code>V2RAYA_ADDRESS</code> e o argumento de comando <code>--address</code>.",
-      "Se você iniciar o contêiner Docker do v2rayA com mapeamento de portas em vez de <code>--network host</code>, poderá remapear as portas desta forma.",
+      "Se você iniciar o contêiner Docker do x-Ray VPN com mapeamento de portas em vez de <code>--network host</code>, poderá remapear as portas desta forma.",
       "Não é possível verificar a ocupação das portas no modo Docker. Confirme por conta própria.",
       "Zero significa fechar esta porta.",
     ],
@@ -446,9 +446,14 @@ export default {
     v2rayInvalid:
       "geosite.dat, geoip.dat ou o v2raya_core podem não estar instalados corretamente",
     coreVersionMismatch:
-      "Incompatibilidade de versão do núcleo: a versão do v2raya_core deve corresponder exatamente à versão do v2rayA. {err}",
+      "Incompatibilidade de versão do núcleo: a versão do v2raya_core deve corresponder exatamente à versão do x-Ray VPN. {err}",
   },
   about: {
+    experimental: "Edição experimental baseada no v2rayA-resilient.",
+    fixes:
+      "Inclui correções no cancelamento de sondagens e DNS, sondagens duplicadas, encerramento de processos, download de recursos, envios XHTTP e validação de REALITY na inicialização.",
+    limitations:
+      "A retomada de sessões TLS e os tamanhos variáveis de POST permanecem desativados por padrão. A correspondência com Chrome 133 é parcial; não há alegação de equivalência com navegadores atuais nem de melhoria geral de CPU/RAM.",
     intro:
       "Um cliente web com núcleo próprio baseado em Xray e proxy transparente global no Linux, Windows e macOS.",
     protocols:
@@ -461,9 +466,9 @@ export default {
   },
   axios: {
     messages: {
-      optimizeBackend: "Alterar o endereço do serviço v2rayA?",
+      optimizeBackend: "Alterar o endereço do serviço x-Ray VPN?",
       noBackendFound:
-        "Não foi possível encontrar o v2rayA em {url}. Verifique se o v2rayA está em execução nesse endereço.",
+        "Não foi possível encontrar o x-Ray VPN em {url}. Verifique se o x-Ray VPN está em execução nesse endereço.",
       cannotCommunicate: [
         "Não foi possível comunicar. Se o serviço estiver em execução e as portas estiverem abertas corretamente, o navegador atual pode não permitir que sites HTTPS acessem recursos HTTP. Tente usar o Chrome ou mudar para o site HTTP alternativo.",
         "Não foi possível comunicar. O Firefox não permite que sites HTTPS acessem recursos HTTP. Tente mudar para o site HTTP alternativo.",
@@ -786,7 +791,7 @@ export default {
     CORE_START_FAILED: "Falha ao iniciar o v2raya_core: {detail}",
     CORE_NOT_FOUND: "v2raya_core não encontrado.",
     CORE_VERSION_MISMATCH:
-      "A versão {core} do v2raya_core não corresponde à versão {app} do v2rayA.",
+      "A versão {core} do v2raya_core não corresponde à versão {app} do x-Ray VPN.",
     PORT_OCCUPIED: "A porta {port} já está em uso.",
     INVALID_PORT: "A porta {port} é inválida.",
     PORT_DUPLICATE: "A porta {port} é usada mais de uma vez.",

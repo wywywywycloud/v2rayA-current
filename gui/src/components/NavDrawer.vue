@@ -25,7 +25,7 @@ const openAbout = () => open(AboutDialog, {}, { width: 640 });
   <v-navigation-drawer permanent :width="256" color="surface" class="drawer">
     <div class="drawer__brand">
       <BrandShape :size="48" />
-      <span class="md3-title-large drawer__wordmark">v2rayA</span>
+      <span class="md3-title-large drawer__wordmark">x-Ray VPN</span>
     </div>
     <v-list nav density="default" class="px-3 pt-2 pb-0">
       <v-list-item
@@ -48,7 +48,7 @@ const openAbout = () => open(AboutDialog, {}, { width: 640 });
           @click="openAbout"
         >
           <span class="md3-label-large"
-            >v2rayA {{ store.version?.version ?? "" }}</span
+            >x-Ray VPN {{ store.version?.version ?? "" }}</span
           >
           <v-tooltip activator="parent" location="end" :offset="12">
             {{ t("common.about") }}

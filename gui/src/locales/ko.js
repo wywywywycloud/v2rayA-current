@@ -110,8 +110,8 @@ export default {
     custom: "사용자 지정",
   },
   welcome: {
-    docker: "v2rayA 서비스가 Docker에서 실행 중입니다. 버전: {version}",
-    default: "v2rayA 서비스가 실행 중입니다. 버전: {version}",
+    docker: "x-Ray VPN 서비스가 Docker에서 실행 중입니다. 버전: {version}",
+    default: "x-Ray VPN 서비스가 실행 중입니다. 버전: {version}",
     newVersion: "새 버전을 사용할 수 있습니다: {version}",
   },
   v2ray: {
@@ -136,7 +136,7 @@ export default {
     updateModeHelp: {
       disabled: "수동으로 업데이트할 때만 구독이 변경됩니다.",
       onStart:
-        "v2rayA가 시작될 때마다 한 번, 주소나 업데이트 정책을 변경하면 즉시 한 번 업데이트합니다.",
+        "x-Ray VPN가 시작될 때마다 한 번, 주소나 업데이트 정책을 변경하면 즉시 한 번 업데이트합니다.",
       interval: "시작할 때 한 번 업데이트한 뒤 설정된 주기로 업데이트합니다.",
       intervalFailsafe:
         "시작 시와 정기 주기에 업데이트합니다. 구독의 모든 서버가 사용할 수 없으면 하나가 복구될 때까지 장애 주기로 다시 시도합니다.",
@@ -273,15 +273,15 @@ export default {
       gfwlist:
         "파일의 수정 시각을 기준으로 하므로 온라인 최신 버전보다 이후일 수 있습니다.",
       transparentProxy:
-        "투명 프록시를 켜면 추가 설정 없이 모든 TCP 트래픽이 v2rayA를 통과합니다. 다른 컴퓨터와 Docker에 게이트웨이로 프록시 서비스를 제공하려면 'LAN에서 공유' 옵션을 켜세요.",
+        "투명 프록시를 켜면 추가 설정 없이 모든 TCP 트래픽이 x-Ray VPN를 통과합니다. 다른 컴퓨터와 Docker에 게이트웨이로 프록시 서비스를 제공하려면 'LAN에서 공유' 옵션을 켜세요.",
       transparentType:
-        "★tproxy: UDP를 지원하지만 Docker는 지원하지 않습니다. ★redirect: Docker에 적합하지만 UDP를 지원하지 않으며 DNS 오염 방지를 위해 로컬 포트 53을 사용합니다. ★tun: 코어가 TUN 장치를 열고 기본 라우트를 가져갑니다. Linux, Windows, macOS와 UDP를 지원하며 v2rayA와 코어를 자동으로 제외하고 다른 프로세스를 이름으로 제외할 수 있습니다. Windows와 macOS에서는 LAN DNS에 직접 질의하는 애플리케이션이 여전히 우회합니다.",
+        "★tproxy: UDP를 지원하지만 Docker는 지원하지 않습니다. ★redirect: Docker에 적합하지만 UDP를 지원하지 않으며 DNS 오염 방지를 위해 로컬 포트 53을 사용합니다. ★tun: 코어가 TUN 장치를 열고 기본 라우트를 가져갑니다. Linux, Windows, macOS와 UDP를 지원하며 x-Ray VPN와 코어를 자동으로 제외하고 다른 프로세스를 이름으로 제외할 수 있습니다. Windows와 macOS에서는 LAN DNS에 직접 질의하는 애플리케이션이 여전히 우회합니다.",
       tproxyExcludedInterfaces:
         "투명 프록시를 거치지 않을 네트워크 인터페이스 접두사를 설정합니다. 와일드카드 *를 지원합니다(iptables 모드에서는 자동으로 +로 변환). 예: docker*, veth*, wg*, ppp*. 여러 접두사는 쉼표로 구분하세요. OpenWrt에서는 기본적으로 LAN 브리지 트래픽도 프록시를 거칩니다. 여기에 br-*를 추가하면 제외됩니다.",
       tunAutoRoute:
-        "활성화하면 v2rayA가 라우트와 DNS 설정을 직접 설치합니다. 비활성화하면 라우팅을 직접 구성할 시작/종료 스크립트를 제공해야 합니다.",
+        "활성화하면 x-Ray VPN가 라우트와 DNS 설정을 직접 설치합니다. 비활성화하면 라우팅을 직접 구성할 시작/종료 스크립트를 제공해야 합니다.",
       tunExcludeProcesses:
-        "트래픽이 프록시를 우회할 프로세스 이름을 한 줄에 하나씩 입력합니다. 예: chrome.exe 또는 firefox. v2rayA와 코어는 항상 제외됩니다. 소켓 소유자의 실행 파일 이름으로 식별하므로, 조회 전에 닫힌 소켓이나 다른 프로세스가 재사용한 포트는 식별할 수 없습니다. 제외된 프로세스의 DNS 질의는 여전히 코어의 DNS 모듈이 응답합니다.",
+        "트래픽이 프록시를 우회할 프로세스 이름을 한 줄에 하나씩 입력합니다. 예: chrome.exe 또는 firefox. x-Ray VPN와 코어는 항상 제외됩니다. 소켓 소유자의 실행 파일 이름으로 식별하므로, 조회 전에 닫힌 소켓이나 다른 프로세스가 재사용한 포트는 식별할 수 없습니다. 제외된 프로세스의 DNS 질의는 여전히 코어의 DNS 모듈이 응답합니다.",
       pacMode: `여기에서 규칙 포트의 트래픽 분할 규칙을 설정할 수 있습니다. 기본적으로 "트래픽 분할 규칙" 포트는 20172이며 HTTP 프로토콜입니다.`,
       tcpFastOpen:
         "TCP 핸드셰이크를 단순화하여 연결 수립을 빠르게 합니다. 패킷 특성이 강조될 위험이 있으며 시스템이 지원하지 않으면 연결에 실패할 수 있습니다.",
@@ -437,9 +437,14 @@ export default {
     v2rayInvalid:
       "geosite.dat, geoip.dat 또는 v2raya_core가 올바르게 설치되지 않았을 수 있습니다",
     coreVersionMismatch:
-      "코어 버전 불일치: v2raya_core 버전은 v2rayA 버전과 정확히 일치해야 합니다. {err}",
+      "코어 버전 불일치: v2raya_core 버전은 x-Ray VPN 버전과 정확히 일치해야 합니다. {err}",
   },
   about: {
+    experimental: "v2rayA-resilient 기반 실험 버전입니다.",
+    fixes:
+      "프로브 및 DNS 취소, 중복 프로브, 프로세스 정리, 리소스 다운로드, XHTTP 업로드 및 REALITY 시작 검증 수정이 포함됩니다.",
+    limitations:
+      "TLS 세션 재개와 가변 POST 크기는 기본적으로 꺼져 있습니다. Chrome 133과 일부만 일치하며, 현재 브라우저와의 동등성이나 전반적인 CPU/RAM 개선을 주장하지 않습니다.",
     intro:
       "자체 Xray 기반 코어를 사용하는 웹 클라이언트로, Linux, Windows, macOS에서 전역 투명 프록시를 제공합니다.",
     protocols:
@@ -451,9 +456,9 @@ export default {
   },
   axios: {
     messages: {
-      optimizeBackend: "v2rayA 서비스 주소를 변경하시겠습니까?",
+      optimizeBackend: "x-Ray VPN 서비스 주소를 변경하시겠습니까?",
       noBackendFound:
-        "{url}에서 v2rayA를 찾을 수 없습니다. 해당 주소에서 v2rayA가 실행 중인지 확인하세요.",
+        "{url}에서 x-Ray VPN를 찾을 수 없습니다. 해당 주소에서 x-Ray VPN가 실행 중인지 확인하세요.",
       cannotCommunicate: [
         "통신할 수 없습니다. 서비스가 실행 중이고 포트가 올바르게 열려 있다면 현재 브라우저가 HTTPS 사이트의 HTTP 리소스 접근을 허용하지 않기 때문일 수 있습니다. Chrome을 사용하거나 대체 HTTP 사이트로 전환해 보세요.",
         "통신할 수 없습니다. Firefox는 HTTPS 사이트의 HTTP 리소스 접근을 허용하지 않습니다. 대체 HTTP 사이트로 전환해 보세요.",
@@ -765,7 +770,7 @@ export default {
     CORE_START_FAILED: "v2raya_core 시작 실패: {detail}",
     CORE_NOT_FOUND: "v2raya_core를 찾을 수 없음.",
     CORE_VERSION_MISMATCH:
-      "v2raya_core 버전 {core}와 v2rayA 버전 {app} 불일치.",
+      "v2raya_core 버전 {core}와 x-Ray VPN 버전 {app} 불일치.",
     PORT_OCCUPIED: "포트 {port} 사용 중.",
     INVALID_PORT: "포트 {port} 잘못됨.",
     PORT_DUPLICATE: "포트 {port} 중복 사용.",

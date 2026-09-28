@@ -17,7 +17,7 @@ With the transparent proxy on, traffic reaches the core without any application 
 | -------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
 | `redirect`     | Linux                                                        | iptables/nftables `REDIRECT`; TCP only, plus DNS on port 53 redirected to the core's DNS module (port 52353) |
 | `tproxy`       | Linux                                                        | iptables/nftables `TPROXY`; TCP and UDP                                                                      |
-| `tun`          | Linux, Windows, macOS                                        | the core opens a TUN device; TCP and UDP; excludes v2rayA and the core by itself                             |
+| `tun`          | Linux, Windows, macOS                                        | the core opens a TUN device; TCP and UDP; excludes x-Ray VPN and the core by itself                             |
 | System proxy   | Windows; Linux and macOS when not running as root (`--lite`) | sets the desktop's proxy settings (GNOME and KDE on Linux); only applications that honour them are covered   |
 
 `redirect` and `tproxy` need root and `iptables` or `nftables`; `tun` needs `/dev/net/tun` and `ip` on Linux and administrator rights on Windows and macOS.
@@ -28,9 +28,9 @@ With the transparent proxy on, traffic reaches the core without any application 
 
 ## TUN
 
-The core creates the TUN device and assigns its address. With **Auto Route** on, v2rayA installs the routes and points the system resolver at the core; with it off, the setup and teardown scripts under **Configure Route Script** do.
+The core creates the TUN device and assigns its address. With **Auto Route** on, x-Ray VPN installs the routes and points the system resolver at the core; with it off, the setup and teardown scripts under **Configure Route Script** do.
 
-What never enters the TUN: the core's own connections, the `direct` outbound and the DNS module's upstream queries (by socket mark on Linux, by binding to the physical interface on Windows and macOS). v2rayA and the core are always excluded; **TUN Excluded Processes** excludes more by executable name, one per line, for connections whose owning process can be identified; their DNS still goes to the core's DNS module. Routes more specific than the default (connected networks, static routes) bypass the TUN as well.
+What never enters the TUN: the core's own connections, the `direct` outbound and the DNS module's upstream queries (by socket mark on Linux, by binding to the physical interface on Windows and macOS). x-Ray VPN and the core are always excluded; **TUN Excluded Processes** excludes more by executable name, one per line, for connections whose owning process can be identified; their DNS still goes to the core's DNS module. Routes more specific than the default (connected networks, static routes) bypass the TUN as well.
 
 Plain DNS on port 53 that reaches the TUN is answered by the core's DNS module according to the DNS rules; encrypted DNS is not intercepted. On Windows the system resolver is pointed at the TUN gateway, on macOS at the core's listener on `127.0.0.1`, which needs port 53 free.
 

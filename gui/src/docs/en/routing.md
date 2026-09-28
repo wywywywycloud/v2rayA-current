@@ -1,10 +1,10 @@
 # Routing rules
 
-RoutingA is the rule language of v2rayA. **Settings → RoutingA** opens the editor; the rules apply to the rule port (`20172`) when its mode is RoutingA and to the transparent proxy when its policy is _Same as the rule port_. A custom inbound bound to RoutingA has its own rule text, see below.
+RoutingA is the rule language of x-Ray VPN. **Settings → RoutingA** opens the editor; the rules apply to the rule port (`20172`) when its mode is RoutingA and to the transparent proxy when its policy is _Same as the rule port_. A custom inbound bound to RoutingA has its own rule text, see below.
 
 ## Syntax
 
-One rule per line: conditions, joined with `&&`, then `->` and an outbound. Rules match from top to bottom and the first match wins; `default:` names the outbound for everything unmatched. A line starting with `#` is a comment. v2rayA puts a few rules of its own in front: the proxy servers' addresses and Apple's push service go direct, and an `inboundTag(...)` condition replaces the rule's usual inbound scope.
+One rule per line: conditions, joined with `&&`, then `->` and an outbound. Rules match from top to bottom and the first match wins; `default:` names the outbound for everything unmatched. A line starting with `#` is a comment. x-Ray VPN puts a few rules of its own in front: the proxy servers' addresses and Apple's push service go direct, and an `inboundTag(...)` condition replaces the rule's usual inbound scope.
 
 ```
 default: proxy
@@ -26,7 +26,7 @@ ip(geoip:private, geoip:cn) -> direct
 
 ## Outbounds
 
-`proxy`, `direct` and `block` are built in. Every other proxy group is an outbound under its own name once it has a connected member; the rules fail to apply otherwise. A SOCKS or HTTP server outside v2rayA is declared once and used like a group (an `ext:` file goes into the rule-data directory):
+`proxy`, `direct` and `block` are built in. Every other proxy group is an outbound under its own name once it has a connected member; the rules fail to apply otherwise. A SOCKS or HTTP server outside x-Ray VPN is declared once and used like a group (an `ext:` file goes into the rule-data directory):
 
 ```
 outbound: office = socks(address: 192.168.1.10, port: 1080)
@@ -36,7 +36,7 @@ domain(domain: corp.example) -> office
 
 ## Categories
 
-`geosite:` categories come from the v2fly [domain-list-community](https://github.com/v2fly/domain-list-community) and `geoip:` codes from [v2fly/geoip](https://github.com/v2fly/geoip); v2rayA downloads whichever file is missing on first start, a package may ship its own build. Frequently used: `geosite:cn`, `geosite:geolocation-!cn`, `geosite:private`, `geosite:category-ads-all`, `geosite:greatfire`, `geosite:netflix`, `geosite:youtube`, `geosite:telegram`, `geosite:openai`; `geoip:cn`, `geoip:private` and the country codes. An attribute narrows a category: `geosite:apple@cn`, `geosite:category-games@cn`.
+`geosite:` categories come from the v2fly [domain-list-community](https://github.com/v2fly/domain-list-community) and `geoip:` codes from [v2fly/geoip](https://github.com/v2fly/geoip); x-Ray VPN downloads whichever file is missing on first start, a package may ship its own build. Frequently used: `geosite:cn`, `geosite:geolocation-!cn`, `geosite:private`, `geosite:category-ads-all`, `geosite:greatfire`, `geosite:netflix`, `geosite:youtube`, `geosite:telegram`, `geosite:openai`; `geoip:cn`, `geoip:private` and the country codes. An attribute narrows a category: `geosite:apple@cn`, `geosite:category-games@cn`.
 
 Names that exist only in Loyalsoldier's builds (`gfw`, `apple-cn`, `google-cn`, `geoip:telegram`) are not in these files; the core refuses them with `illegal domain rule` or `illegal ip rule`. **Update GFWList** downloads that build (from `v2rayA/dist-v2ray-rules-dat`) as `LoyalsoldierSite.dat`, and rules can then use it as `domain(ext:"LoyalsoldierSite.dat:gfw")`.
 
@@ -46,7 +46,7 @@ The list mode edits each rule with a form; the text mode shows line numbers, col
 
 The Russia template sends `geosite:category-ru` directly, except for its listed proxy-first domains; everything else uses the proxy. It is a bundled snapshot of [routinga-russia](https://github.com/wywywywycloud/routinga-russia), not a live-updating list, and requires a `geosite.dat` containing `category-ru`.
 
-Saving reloads a running core with the new rules; when the core rejects them, v2rayA puts the previous rules back and shows the core's error, which names the offending text. A stopped core takes the rules on its next start.
+Saving reloads a running core with the new rules; when the core rejects them, x-Ray VPN puts the previous rules back and shows the core's error, which names the offending text. A stopped core takes the rules on its next start.
 
 ## Custom inbounds
 

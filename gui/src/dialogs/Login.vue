@@ -55,6 +55,7 @@ function openAddress() {
     <v-card-item class="pt-6 px-6">
       <div class="d-flex flex-column align-center ga-3">
         <img :src="logo" alt="" class="login__logo" />
+          <div class="md3-title-large">x-Ray VPN</div>
         <v-card-title class="md3-headline-small pa-0 text-center text-wrap">
           {{ first ? t("register.title") : t("login.title") }}
         </v-card-title>

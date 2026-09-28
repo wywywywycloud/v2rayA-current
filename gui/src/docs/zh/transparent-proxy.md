@@ -17,7 +17,7 @@
 | ---------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
 | `redirect` | Linux                                                    | iptables/nftables `REDIRECT`；只有 TCP，另把 53 端口的 DNS 重定向到内核的 DNS 模块（52353 端口） |
 | `tproxy`   | Linux                                                    | iptables/nftables `TPROXY`；TCP 与 UDP                                                           |
-| `tun`      | Linux、Windows、macOS                                    | 内核打开 TUN 设备；TCP 与 UDP；自动排除 v2rayA 与内核自身                                        |
+| `tun`      | Linux、Windows、macOS                                    | 内核打开 TUN 设备；TCP 与 UDP；自动排除 x-Ray VPN 与内核自身                                        |
 | 系统代理   | Windows；Linux 与 macOS 在非 root 运行（`--lite`）时可用 | 修改桌面的代理设置（Linux 上为 GNOME 与 KDE）；只覆盖遵守该设置的应用                            |
 
 `redirect` 与 `tproxy` 需要 root 和 `iptables` 或 `nftables`；`tun` 在 Linux 上需要 `/dev/net/tun` 与 `ip` 命令，在 Windows 与 macOS 上需要管理员权限。
@@ -28,9 +28,9 @@
 
 ## TUN
 
-内核创建 TUN 设备并配置地址。**自动路由**开启时由 v2rayA 安装路由并把系统解析器指向内核；关闭时由**配置路由脚本**里的安装与卸载脚本完成。
+内核创建 TUN 设备并配置地址。**自动路由**开启时由 x-Ray VPN 安装路由并把系统解析器指向内核；关闭时由**配置路由脚本**里的安装与卸载脚本完成。
 
-不会进入 TUN 的流量：内核自己的连接、`direct` 出站与 DNS 模块的上游查询（Linux 通过套接字标记，Windows 与 macOS 通过绑定物理网卡）。v2rayA 与内核始终被排除；**TUN 自定义排除进程**按可执行文件名排除更多进程，每行一个，只对能识别出所属进程的连接生效，这些进程的 DNS 仍由内核的 DNS 模块回答。比默认路由更精确的路由（直连网段、静态路由）同样不经过 TUN。
+不会进入 TUN 的流量：内核自己的连接、`direct` 出站与 DNS 模块的上游查询（Linux 通过套接字标记，Windows 与 macOS 通过绑定物理网卡）。x-Ray VPN 与内核始终被排除；**TUN 自定义排除进程**按可执行文件名排除更多进程，每行一个，只对能识别出所属进程的连接生效，这些进程的 DNS 仍由内核的 DNS 模块回答。比默认路由更精确的路由（直连网段、静态路由）同样不经过 TUN。
 
 到达 TUN 的 53 端口明文 DNS 由内核的 DNS 模块按 DNS 规则回答；加密 DNS 不被拦截。Windows 上系统解析器指向 TUN 网关，macOS 上指向内核在 `127.0.0.1` 的监听，后者要求 53 端口空闲。
 

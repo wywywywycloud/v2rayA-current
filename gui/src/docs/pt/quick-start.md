@@ -1,6 +1,6 @@
 # Início rápido
 
-Esta página no navegador configura o v2rayA e mostra seu estado; o serviço é executado como root (como administrador no Windows; sem privilégios com `--lite`) e inicia o próprio `v2raya_core`.
+Esta página no navegador configura o x-Ray VPN e mostra seu estado; o serviço é executado como root (como administrador no Windows; sem privilégios com `--lite`) e inicia o próprio `v2raya_core`.
 
 ## Entrar
 
@@ -62,7 +62,7 @@ No macOS, `Cmd` corresponde a `Ctrl`.
 Cada assinatura tem seu próprio modo de atualização:
 
 - **Desativada:** atualizar somente quando solicitado manualmente.
-- **Ao iniciar o serviço:** atualizar uma vez sempre que o v2rayA iniciar.
+- **Ao iniciar o serviço:** atualizar uma vez sempre que o x-Ray VPN iniciar.
 - **Em um intervalo:** atualizar ao iniciar e depois do número de minutos configurado.
 - **Em um intervalo com recuperação de falha:** seguir a programação regular e também verificar os servidores salvos no intervalo de falha. Quando nenhum funcionar, atualizar a assinatura nesse intervalo até que pelo menos um fique disponível.
 
@@ -70,7 +70,7 @@ Downloads com erro ou vazios preservam a lista de servidores salva. Uma tentativ
 
 Na atualização, o modo global antigo **ao iniciar** é atribuído a todas as assinaturas existentes como **Ao iniciar o serviço**. O modo antigo por intervalo passa a **Em um intervalo**, com as horas convertidas em minutos. A recuperação de falha nunca é ativada pela migração; selecione-a manualmente onde for necessária.
 
-Alterar o endereço, o modo ou os intervalos reinicia imediatamente uma programação ativa. Selecionar **Ao iniciar o serviço** com o v2rayA em execução atualiza uma vez imediatamente e depois aguarda o próximo início do serviço. Alterar apenas as observações não reinicia a programação.
+Alterar o endereço, o modo ou os intervalos reinicia imediatamente uma programação ativa. Selecionar **Ao iniciar o serviço** com o x-Ray VPN em execução atualiza uma vez imediatamente e depois aguarda o próximo início do serviço. Alterar apenas as observações não reinicia a programação.
 
 Importações e atualizações manuais ou programadas seguem o **Modo ao atualizar assinaturas**; a rota proxy/PAC salva nunca muda silenciosamente. Se proxy/PAC estiver selecionado enquanto o núcleo estiver parado, uma importação ou atualização manual perguntará se deve ignorar o proxy e baixar diretamente somente nessa solicitação; recusar cancela a solicitação. As atualizações programadas mantêm a rota configurada. Somente uma tentativa de recuperação após a falha de todos os servidores pode repetir diretamente se a rota de download falhar. Cada desvio é registrado; a rede pode ver o endereço do serviço de assinatura. Isso exige a opção separada **Ignorar a rota de download da assinatura durante a recuperação**, desativada por padrão para assinaturas novas e atualizadas. Sem ela, a recuperação continua tentando pelo proxy/PAC configurado. Com ela, a exceção vale apenas para baixar a assinatura, não para outro tráfego.
 

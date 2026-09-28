@@ -135,7 +135,7 @@ function applyTitle() {
       host = address;
     }
   }
-  document.title = `v2rayA - ${host}`;
+  document.title = `x-Ray VPN - ${host}`;
 }
 
 // No token: ask whether an account exists, with a few retries in case the
@@ -207,7 +207,10 @@ async function announceVersion() {
       action: {
         label: "GitHub",
         onClick: () =>
-          window.open("https://github.com/v2rayA/v2rayA/releases", "_blank"),
+          window.open(
+            "https://github.com/wywywywycloud/v2rayA-resilient/releases",
+            "_blank",
+          ),
       },
     });
   if (v.coreVersionValid === false)
@@ -421,10 +424,10 @@ onBeforeUnmount(() => window.removeEventListener("hashchange", openHash));
       scroll-behavior="elevate"
     >
       <template v-if="compact" #prepend>
-        <img :src="logo" alt="v2rayA" class="bar__logo ms-2" />
+        <img :src="logo" alt="x-Ray VPN" class="bar__logo ms-2" />
       </template>
       <v-app-bar-title class="md3-title-large" :class="{ bar__brand: compact }">
-        {{ compact ? "v2rayA" : pageTitle }}
+        {{ compact ? "x-Ray VPN" : pageTitle }}
       </v-app-bar-title>
       <v-btn
         :color="statusColor"

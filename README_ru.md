@@ -1,8 +1,16 @@
 <div align="center">
 
-<img src="gui/public/static/v2raya-icon.svg" width="96" alt="v2rayA">
+<img src="gui/public/static/v2raya-icon.svg" width="96" alt="x-Ray VPN">
 
-# v2rayA
+# x-Ray VPN
+
+Экспериментальная версия на основе v2rayA-resilient.
+
+Включает исправления отмены проверок и DNS, дублирующих проверок, завершения процессов, загрузки ресурсов, отправки XHTTP и проверки REALITY при запуске.
+
+Возобновление TLS-сессий и переменный размер POST по умолчанию выключены. Совпадение с Chrome 133 частичное; соответствие текущему браузеру и общий выигрыш CPU/RAM не заявляются.
+
+[Experimental release notes](EXPERIMENTAL.md)
 
 **Веб-клиент для собственного ядра на базе Xray с прозрачным прокси в Linux, Windows и macOS.**
 
@@ -12,7 +20,7 @@
 
 </div>
 
-v2rayA работает как служба и управляется из браузера — на самом компьютере, на маршрутизаторе или NAS. Он импортирует подписки и ссылки VMess, VLESS, Shadowsocks, Trojan, Hysteria2, TUIC, [Juicity](https://github.com/juicity), AnyTLS, WireGuard, SOCKS5 и HTTP(S), объединяет узлы в группы, выбирает узел с наименьшей измеренной задержкой или закреплённый узел и разделяет трафик по правилам RoutingA. ShadowsocksR не поддерживается.
+x-Ray VPN работает как служба и управляется из браузера — на самом компьютере, на маршрутизаторе или NAS. Он импортирует подписки и ссылки VMess, VLESS, Shadowsocks, Trojan, Hysteria2, TUIC, [Juicity](https://github.com/juicity), AnyTLS, WireGuard, SOCKS5 и HTTP(S), объединяет узлы в группы, выбирает узел с наименьшей измеренной задержкой или закреплённый узел и разделяет трафик по правилам RoutingA. ShadowsocksR не поддерживается.
 
 ## Требования
 
@@ -27,166 +35,9 @@ v2rayA работает как служба и управляется из бр�
 
 ## Установка
 
-Пакеты ниже устанавливают `v2raya` и `v2raya_core` вместе с описанием службы. Включите службу командой, указанной для платформы.
+Целевая платформа experimental — OpenWrt **24.10.4 ARM64** (`aarch64_cortex-a53`). Используйте три согласованных IPK из [экспериментального выпуска](https://github.com/wywywywycloud/v2rayA-resilient/releases/tag/experimental-2026.09.28.1). [Инструкция воспроизводимой сборки и упаковки](install/openwrt-experimental/README.md) и отчёт о проверке в выпуске описывают конкретные артефакты. Устанавливайте и откатывайте сервис и ядро вместе.
 
-<details>
-<summary><strong>Debian, Ubuntu и другие дистрибутивы с APT</strong></summary>
-
-Пакеты берутся из [репозитория Dae Universe](https://github.com/daeuniverse/repo-for-linux).
-
-```sh
-sudo apt update
-sudo apt install curl
-```
-
-APT 3.0 и новее:
-
-```sh
-sudo curl -fsSL -o /etc/apt/sources.list.d/daeuniverse.sources https://daeuniverse.pages.dev/daeuniverse.sources
-```
-
-APT версии ниже 3.0:
-
-```sh
-sudo curl -fsSL -o /etc/apt/sources.list.d/daeuniverse.list https://daeuniverse.pages.dev/daeuniverse.list
-```
-
-Затем ключ и пакет:
-
-```sh
-sudo curl -fsSL -o /usr/share/keyrings/daeuniverse-archive-goose.gpg https://daeuniverse.pages.dev/daeuniverse-archive-goose.gpg
-sudo apt update
-sudo apt install v2raya
-sudo systemctl enable --now v2raya
-```
-
-Юнит меняйте через `sudo systemctl edit --full v2raya.service`: правку установленного файла перезапишет следующее обновление.
-
-</details>
-
-<details>
-<summary><strong>Fedora, RHEL, openSUSE и другие дистрибутивы с RPM</strong></summary>
-
-Fedora, RHEL и производные:
-
-```sh
-sudo curl -fsSL -o /etc/yum.repos.d/daeuniverse.repo https://daeuniverse.pages.dev/daeuniverse.repo
-sudo dnf install v2raya
-```
-
-openSUSE:
-
-```sh
-sudo curl -fsSL -o /etc/zypp/repos.d/daeuniverse.repo https://daeuniverse.pages.dev/daeuniverse.repo
-sudo zypper install v2raya
-```
-
-Затем:
-
-```sh
-sudo systemctl enable --now v2raya
-```
-
-</details>
-
-<details>
-<summary><strong>Arch Linux</strong></summary>
-
-В AUR `v2raya` собирается из исходников, `v2raya-bin` использует готовые бинарные файлы. На странице выпусков есть и `installer_archlinux_<arch>_<version>.pkg.tar.zst` для `pacman -U`.
-
-```sh
-paru -S v2raya-bin
-sudo systemctl enable --now v2raya
-```
-
-</details>
-
-<details>
-<summary><strong>Gentoo, Alpine и другие системы с OpenRC</strong></summary>
-
-В Gentoo установите пакет из оверлея [gentoo-zh](https://github.com/gentoo-zh/overlay) и включите службу:
-
-```sh
-sudo emerge net-proxy/v2rayA
-sudo rc-update add v2raya default
-sudo rc-service v2raya start
-```
-
-В остальных системах скачайте оба бинарных файла для своей архитектуры со [страницы выпусков](https://github.com/v2rayA/v2rayA/releases) и возьмите файлы OpenRC из [`install/universal/`](install/universal/). Команды выполняются из клона репозитория; `VERSION` — номер выпуска без ведущей `v`; пример для x64:
-
-```sh
-sudo install -m755 "v2raya_linux_x64_${VERSION}" /usr/bin/v2raya
-sudo install -m755 "v2raya_core_linux_x64_${VERSION}" /usr/bin/v2raya_core
-sudo install -m755 install/universal/v2raya.initd /etc/init.d/v2raya
-sudo install -m644 install/universal/v2raya.confd /etc/conf.d/v2raya
-sudo rc-update add v2raya default
-sudo rc-service v2raya start
-```
-
-</details>
-
-<details>
-<summary><strong>Docker</strong></summary>
-
-Образ — `ghcr.io/v2raya/v2raya` (на Docker Hub — `mzz2017/v2raya`). Пример для хоста Linux: контейнер получает сеть хоста и привилегии, без которых прозрачный прокси не работает:
-
-```sh
-docker run -d --restart=always --privileged --network=host --name v2raya \
-  -e V2RAYA_LOG_FILE=/tmp/v2raya.log \
-  -v /lib/modules:/lib/modules:ro \
-  -v /etc/resolv.conf:/etc/resolv.conf \
-  -v /etc/v2raya:/etc/v2raya \
-  ghcr.io/v2raya/v2raya
-```
-
-При сети bridge опубликуйте порт 2017 и используемые входящие порты и включите общий доступ к портам в настройках, иначе входящие подключения принимаются только на loopback контейнера. Прозрачный прокси в такой схеме недоступен.
-
-</details>
-
-<details>
-<summary><strong>Windows</strong></summary>
-
-`installer_windows_inno_x64_<version>.exe` (или `arm64`) со [страницы выпусков](https://github.com/v2rayA/v2rayA/releases) устанавливает оба бинарных файла и регистрирует службу. Тот же установщик стоит за `winget install --id v2rayA.v2rayA` и за [scoop bucket](https://github.com/v2rayA/v2raya-scoop) (`scoop bucket add v2raya https://github.com/v2rayA/v2raya-scoop && scoop install v2raya-np`).
-
-</details>
-
-<details>
-<summary><strong>macOS</strong></summary>
-
-[Tap](https://github.com/v2rayA/homebrew-v2raya) устанавливает оба бинарных файла. Запущенная от root служба даёт прозрачный прокси `tun`; запущенная от вас — работает в режиме lite с системным прокси:
-
-```sh
-brew tap v2raya/v2raya
-brew install v2raya/v2raya/v2raya
-sudo brew services start v2raya   # root: tun
-brew services start v2raya        # вы: системный прокси
-```
-
-Службу, запущенную через `sudo`, останавливают командой `sudo brew services stop v2raya`; Homebrew предупреждает, что обновление или удаление formula, запускавшейся от root, требует `sudo rm` перечисленных им путей.
-
-</details>
-
-<details>
-<summary><strong>OpenWrt</strong></summary>
-
-Репозиторий [v2raya-openwrt](https://github.com/v2rayA/v2raya-openwrt) и официальный репозиторий packages сейчас содержат 2.2.7.x с отдельным `xray-core`, а не описанный здесь выпуск. Пока они не обновлены, установите бинарные файлы выпуска для `mips32`, `mips32le`, `arm64` или `x64` вручную, как в следующем разделе, с собственным init-скриптом.
-
-</details>
-
-<details>
-<summary><strong>Другой Linux, без пакета</strong></summary>
-
-Скачайте `v2raya_linux_<arch>_<version>` и `v2raya_core_linux_<arch>_<version>` со [страницы выпусков](https://github.com/v2rayA/v2rayA/releases) (`x86`, `x64`, `arm64`, `armv7`, `riscv64`, `loongarch64`, `mips32`, `mips32le`, `mips64`, `mips64le`), сверьте их с соседним `.sha256.txt` и установите оба в `/usr/bin`. Для systemd:
-
-```sh
-sudo install -m644 install/universal/v2raya.service /etc/systemd/system/v2raya.service
-sudo systemctl daemon-reload
-sudo systemctl enable --now v2raya
-```
-
-Для OpenRC используйте файлы из раздела выше. Есть и отдельно поддерживаемый [snap](https://snapcraft.io/v2raya).
-
-</details>
+Пакеты upstream и прежний подписанный feed Resilient — другие сборки; их матрицы установки не подтверждают проверку этого experimental-выпуска.
 
 ## Первый запуск
 
@@ -208,7 +59,7 @@ sudo systemctl enable --now v2raya
 
 Режимы системного прокси меняют настройки прокси рабочего стола и охватывают только приложения, которые их соблюдают. Остальные режимы перехватывают трафик.
 
-В режиме `tun` ядро открывает устройство TUN и назначает ему адрес; при включённой автоматической маршрутизации (по умолчанию) маршруты и настройку DNS устанавливает v2rayA, иначе — ваш собственный скрипт. Собственные соединения ядра, прямой исходящий трафик и запросы DNS-модуля к вышестоящим серверам не попадают в TUN (в Linux — метки сокетов, в Windows и macOS — привязка к физическому интерфейсу). На незашифрованные DNS-запросы на порт 53, попавшие в TUN, отвечает DNS-модуль ядра; зашифрованный DNS не перехватывается. v2rayA и ядро исключаются всегда; другие процессы можно исключить в настройках по имени исполняемого файла. Более специфичные маршруты подключённых сетей и статические маршруты обходят TUN.
+В режиме `tun` ядро открывает устройство TUN и назначает ему адрес; при включённой автоматической маршрутизации (по умолчанию) маршруты и настройку DNS устанавливает x-Ray VPN, иначе — ваш собственный скрипт. Собственные соединения ядра, прямой исходящий трафик и запросы DNS-модуля к вышестоящим серверам не попадают в TUN (в Linux — метки сокетов, в Windows и macOS — привязка к физическому интерфейсу). На незашифрованные DNS-запросы на порт 53, попавшие в TUN, отвечает DNS-модуль ядра; зашифрованный DNS не перехватывается. x-Ray VPN и ядро исключаются всегда; другие процессы можно исключить в настройках по имени исполняемого файла. Более специфичные маршруты подключённых сетей и статические маршруты обходят TUN.
 
 Известное ограничение: в Windows и macOS приложение, которое обращается напрямую к DNS-серверу в локальной сети, по-прежнему обходит TUN. Системный резолвер охвачен: Windows направляет его на шлюз TUN, macOS — на слушатель ядра на `127.0.0.1`, для которого порт 53 должен быть свободен.
 
@@ -226,7 +77,7 @@ sudo systemctl enable --now v2raya
 
 ## Поддержка
 
-Задавайте вопросы в [Discussions](https://github.com/v2rayA/v2rayA/discussions) и сообщайте об ошибках в [Issues](https://github.com/v2rayA/v2rayA/issues).
+Задавайте вопросы в [Discussions](https://github.com/wywywywycloud/v2rayA-resilient/discussions) и сообщайте об ошибках в [Issues](https://github.com/wywywywycloud/v2rayA-resilient/issues).
 
 Не используйте этот проект в противоправных целях.
 
