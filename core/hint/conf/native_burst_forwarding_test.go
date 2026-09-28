@@ -145,9 +145,9 @@ func TestNativeBurstAliasFileOverride(t *testing.T) {
 	alias := `{"burstObservatory":{"subjectSelector":["direct"],"pingConfig":{"samplingCount":2}}}`
 	native := `{"burstObservatory":{"subjectSelector":["direct"],"pingConfig":{"sampling":4}}}`
 	for _, tc := range []struct {
-		name string
-		docs []string
-		want int32
+		name      string
+		docs      []string
+		want      int32
 		wantMulti int
 	}{
 		{"alias_then_native", []string{alias, native}, 4, 0},

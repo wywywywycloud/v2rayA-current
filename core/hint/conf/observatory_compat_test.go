@@ -45,7 +45,7 @@ func TestObservatoryLegacyAndPrecedence(t *testing.T) {
 
 func TestObservatoryEmptySemantics(t *testing.T) {
 	for _, tc := range []struct {
-		raw string
+		raw  string
 		want int
 	}{
 		{`{}`, 0},
