@@ -1,10 +1,6 @@
-v2rayA source: 283daeb02cb3f7d48d49ad130dd7df3dcdfca663
-OpenWrt integration source: 8546ed6dd526b484e5ab6cb76935dd11b7671c06
-OpenWrt-only patch: tools/apply-resilient-defaults.py
-Version: 2.5.7-resilient.14
-Release: r21.resilient1
-Go: go1.26.8 windows/amd64 (cross-compiled linux/arm64, CGO_ENABLED=0)
-Service build: -buildvcs=false -trimpath -ldflags "-s -w -X github.com/v2rayA/v2rayA/conf.Version=2.5.7-resilient.14"
-Core build: -buildvcs=false -trimpath -ldflags "-s -w -X main.Version=2.5.7-resilient.14"
-Node: v24.19.0
-OpenWrt VM: 24.10.4 armsr/armv8, 512 MiB RAM
+x-Ray VPN experimental
+Version: 2026.09.28-experimental.1
+Application source: 002c144fef9be4aeee4716adb2f8d2913d04d6ca
+The three application IPKs are byte-identical to GitHub release experimental-2026.09.28.1.
+xray-proxy-client-experimental is a data-free metapackage with exact version dependencies.
+System dependencies are supplied by the device official OpenWrt repositories.

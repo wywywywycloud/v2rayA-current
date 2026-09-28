@@ -39,5 +39,5 @@ if ! cmp -s "$work_dir/customfeeds.before" "$work_dir/customfeeds.conf"; then
 fi
 rm -f /var/opkg-lists/v2raya_levin /var/opkg-lists/v2raya_levin.sig /var/opkg-lists/v2raya_current /var/opkg-lists/v2raya_fork
 opkg update
-echo 'Feed added. In LuCI: System > Software > filter resilient > Install luci-app-v2raya-resilient.'
+echo 'Feed added. In LuCI: System > Software > filter xray-proxy-client-experimental > Install xray-proxy-client-experimental.'
 echo 'No application package or application setting was changed by this script.'

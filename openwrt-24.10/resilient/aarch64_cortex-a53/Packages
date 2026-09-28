@@ -1,54 +1,68 @@
-Package: v2raya-resilient-core
-Version: 2.5.7-resilient.14-r21.resilient1
-Architecture: aarch64_cortex-a53
-Provides: v2raya-core, v2raya-levin-core
-Conflicts: v2raya-core, v2raya-levin-core
-Replaces: v2raya-core, v2raya-levin-core
-License: MPL-2.0
-Source: https://github.com/wywywywycloud/v2raya-openwrt-current/tree/release/resilient-openwrt-24.10
-Maintainer: wywywywycloud
-Section: net
-Priority: optional
-Depends: libc
-Installed-Size: 35192994
-Description: Matching proxy core for v2rayA Resilient
-Filename: v2raya-resilient-core_2.5.7-resilient.14-r21.resilient1_aarch64_cortex-a53.ipk
-Size: 12472636
-SHA256sum: 2edb609ad5dbd3f18196046a9882d58e609f8de2ff561a94da497cebc770f0e9
-
-Package: v2raya-resilient
-Version: 2.5.7-resilient.14-r21.resilient1
-Architecture: aarch64_cortex-a53
-Provides: v2raya, v2raya-levin
-Conflicts: v2raya, v2raya-levin
-Replaces: v2raya, v2raya-levin
-License: AGPL-3.0-only
-Source: https://github.com/wywywywycloud/v2raya-openwrt-current/tree/release/resilient-openwrt-24.10
-Maintainer: wywywywycloud
-Section: net
-Priority: optional
-Depends: libc, ca-bundle, kmod-nft-tproxy, v2raya-resilient-core (= 2.5.7-resilient.14-r21.resilient1), v2ray-geoip, v2ray-geosite
-Installed-Size: 27791587
-Description: Resilient fork of v2rayA: URL and throughput-aware proxy groups, explicit pinning and four update modes
-Filename: v2raya-resilient_2.5.7-resilient.14-r21.resilient1_aarch64_cortex-a53.ipk
-Size: 10207523
-SHA256sum: bf33117e2dd1b9777b81b0adef710f41491defa20d79b339bcd7b0d5e323af99
-
 Package: luci-app-v2raya-resilient
-Version: 26.268.0-r21.resilient1
+Version: 2026.09.28-experimental.1
 Architecture: aarch64_cortex-a53
 Provides: luci-app-v2raya, luci-app-v2raya-levin
 Conflicts: luci-app-v2raya, luci-app-v2raya-levin
 Replaces: luci-app-v2raya, luci-app-v2raya-levin
 License: Apache-2.0
-Source: https://github.com/wywywywycloud/v2raya-openwrt-current/tree/release/resilient-openwrt-24.10
+Source: https://github.com/wywywywycloud/v2rayA-resilient/tree/experimental
 Maintainer: wywywywycloud
 Section: net
 Priority: optional
-Depends: luci-light, v2raya-resilient (= 2.5.7-resilient.14-r21.resilient1)
-Installed-Size: 5745
-Description: v2rayA Resilient - install this package for the complete fork with LuCI
-Filename: luci-app-v2raya-resilient_26.268.0-r21.resilient1_aarch64_cortex-a53.ipk
-Size: 3273
-SHA256sum: 555f835b4bcff71286f999d2a487170a560ba2bc37d7936075f3fa3c197c2dc9
+Depends: luci-light, v2raya-resilient (= 2026.09.28-experimental.1)
+Installed-Size: 5665
+Description: x-Ray VPN - complete experimental application with LuCI
+Filename: luci-app-v2raya-resilient_2026.09.28-experimental.1_aarch64_cortex-a53.ipk
+Size: 3207
+SHA256sum: 20eba884e8381049fa6edf5e32cdf5c7f15e94780401dc3053f20bae21fd2e5b
+
+Package: v2raya-resilient-core
+Version: 2026.09.28-experimental.1
+Architecture: aarch64_cortex-a53
+Provides: v2raya-core, v2raya-levin-core
+Conflicts: v2raya-core, v2raya-levin-core
+Replaces: v2raya-core, v2raya-levin-core
+License: MPL-2.0
+Source: https://github.com/wywywywycloud/v2rayA-resilient/tree/experimental
+Maintainer: wywywywycloud
+Section: net
+Priority: optional
+Depends: libc
+Installed-Size: 35324066
+Description: Matching proxy core for x-Ray VPN
+Filename: v2raya-resilient-core_2026.09.28-experimental.1_aarch64_cortex-a53.ipk
+Size: 12513711
+SHA256sum: 2e468fae3a0d090355c7e9ed06ba237085457dd4205e38ebeadeb3b067c47330
+
+Package: v2raya-resilient
+Version: 2026.09.28-experimental.1
+Architecture: aarch64_cortex-a53
+Provides: v2raya, v2raya-levin
+Conflicts: v2raya, v2raya-levin
+Replaces: v2raya, v2raya-levin
+License: AGPL-3.0-only
+Source: https://github.com/wywywywycloud/v2rayA-resilient/tree/experimental
+Maintainer: wywywywycloud
+Section: net
+Priority: optional
+Depends: libc, ca-bundle, kmod-nft-tproxy, v2raya-resilient-core (= 2026.09.28-experimental.1), v2ray-geoip, v2ray-geosite
+Installed-Size: 27660527
+Description: x-Ray VPN experimental service with Xray-based proxy groups
+Filename: v2raya-resilient_2026.09.28-experimental.1_aarch64_cortex-a53.ipk
+Size: 10199292
+SHA256sum: 38c29e1668b40629a7f5402885219b10f80916eb19e7b9589c516d241d134e5d
+
+Package: xray-proxy-client-experimental
+Version: 2026.09.28-experimental.1
+Architecture: aarch64_cortex-a53
+License: AGPL-3.0-only
+Maintainer: wywywywycloud
+Section: net
+Priority: optional
+Installed-Size: 0
+Depends: luci-app-v2raya-resilient (= 2026.09.28-experimental.1), v2raya-resilient (= 2026.09.28-experimental.1), v2raya-resilient-core (= 2026.09.28-experimental.1)
+Description: x-Ray VPN experimental - installs matching service, core and LuCI with dependencies; replaces the existing Resilient application
+Filename: xray-proxy-client-experimental_2026.09.28-experimental.1_aarch64_cortex-a53.ipk
+Size: 608
+SHA256sum: 3402a1be9ca8b5be3f502758e041f55268293f1620d5b5f46b414b50689605db
 
