@@ -415,9 +415,17 @@ func TestProbeWithCurrentCore(t *testing.T) {
 	resetSubscription(t)
 	for _, status := range []int{204, 302, 503} {
 		t.Run(fmt.Sprint(status), func(t *testing.T) {
+			var configuredRequests atomic.Int32
 			proxy := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				// The independent speed sample also traverses this local proxy.
+				// Reject it locally; reachability must still follow the configured URL.
+				if r.Method == http.MethodConnect && r.URL.Host == "speed.cloudflare.com:443" {
+					http.Error(w, "fixture has no speed endpoint", http.StatusServiceUnavailable)
+					return
+				}
 				if r.URL.Hostname() != "probe.invalid" {
 					t.Errorf("request did not traverse proxy: %s", r.URL)
+					return
 				}
 				conn, rw, err := w.(http.Hijacker).Hijack()
 				if err != nil {
@@ -426,9 +434,16 @@ func TestProbeWithCurrentCore(t *testing.T) {
 				defer conn.Close()
 				fmt.Fprint(rw, "HTTP/1.1 200 Connection established\r\n\r\n")
 				rw.Flush()
-				if _, err = http.ReadRequest(rw.Reader); err != nil {
+				request, err := http.ReadRequest(rw.Reader)
+				if err != nil {
 					return
 				}
+				defer request.Body.Close()
+				if request.URL.Path != "/check" || request.Host != "probe.invalid" {
+					t.Errorf("unexpected tunneled request: %s host=%s", request.URL, request.Host)
+					return
+				}
+				configuredRequests.Add(1)
 				fmt.Fprintf(rw, "HTTP/1.1 %d %s\r\nContent-Length: 0\r\nConnection: close\r\n\r\n", status, http.StatusText(status))
 				rw.Flush()
 			}))
@@ -437,6 +452,9 @@ func TestProbeWithCurrentCore(t *testing.T) {
 			_, err := probeSubscriptionServer(testServer(t, port), "http://probe.invalid/check", time.Second)
 			if (err == nil) != (status == 204) {
 				t.Fatalf("status %d: %v", status, err)
+			}
+			if got := configuredRequests.Load(); got != 1 {
+				t.Fatalf("configured URL traversed proxy %d times, want 1", got)
 			}
 		})
 	}

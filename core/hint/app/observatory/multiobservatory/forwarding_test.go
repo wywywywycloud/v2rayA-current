@@ -39,10 +39,12 @@ func TestObservatoryRuntimeHTTP(t *testing.T) {
 		t.Run(method, func(t *testing.T) {
 			var mu sync.Mutex
 			methods := []string{}
+			paths := map[string]int{}
 			connectivity := 0
 			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				mu.Lock()
 				methods = append(methods, r.Method)
+				paths[r.URL.Path]++
 				if r.URL.Path == "/connectivity" {
 					connectivity++
 				}
@@ -52,7 +54,8 @@ func TestObservatoryRuntimeHTTP(t *testing.T) {
 					// Avoid zero RTT on hosts with coarse timer resolution.
 					time.Sleep(2 * time.Millisecond)
 				case "/slow":
-					time.Sleep(300 * time.Millisecond)
+					<-r.Context().Done()
+					return
 				case "/broken":
 					conn, _, err := w.(http.Hijacker).Hijack()
 					if err == nil {
@@ -68,7 +71,11 @@ func TestObservatoryRuntimeHTTP(t *testing.T) {
 				c := &ObserverConfig{Tag: path, ProbeUrl: server.URL + path, ProbeInterval: int64(13 * time.Second)}
 				setPingField(t, c, "http_method", method)
 				setPingField(t, c, "sampling_count", int32(2))
-				setPingField(t, c, "timeout", int64(60*time.Millisecond))
+				timeout := 2 * time.Second
+				if path == "/slow" {
+					timeout = 60 * time.Millisecond
+				}
+				setPingField(t, c, "timeout", int64(timeout))
 				setPingField(t, c, "connectivity", server.URL+"/connectivity")
 				configs = append(configs, c)
 			}
@@ -100,6 +107,9 @@ func TestObservatoryRuntimeHTTP(t *testing.T) {
 			if status[0].HealthPing.All != 2 {
 				t.Errorf("sample window=%d want 2", status[0].HealthPing.All)
 			}
+			if !status[0].Alive || status[0].HealthPing.Fail != 0 {
+				t.Fatalf("successful probes failed before timeout/EOF controls: %v", status)
+			}
 			started := time.Now()
 			mo.children["/slow"].(*burst.Observer).Check([]string{"direct"})
 			elapsed := time.Since(started)
@@ -115,7 +125,7 @@ func TestObservatoryRuntimeHTTP(t *testing.T) {
 			mo.children["/broken"].(*burst.Observer).Check([]string{"direct"})
 			mu.Lock()
 			defer mu.Unlock()
-			t.Logf("endpoint methods=%v connectivity requests=%d", methods, connectivity)
+			t.Logf("endpoint methods=%v paths=%v connectivity requests=%d", methods, paths, connectivity)
 			if connectivity != 2 {
 				t.Errorf("connectivity calls=%d want 2", connectivity)
 			}
