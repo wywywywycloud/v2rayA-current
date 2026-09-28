@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package xray.core.app.observatory.multiobservatory;
+option go_package = "github.com/v2rayA/v2raya-core/hint/app/observatory/multiobservatory";
+
+// ObserverConfig defines one observatory group with a dedicated balancer tag.
+message ObserverConfig {
+  string tag = 1;
+  string probe_url = 2;
+  // Durations use nanoseconds, matching time.Duration and HealthPingConfig.
+  int64 probe_interval = 3;
+  repeated string subject_selector = 4;
+  int64 timeout = 5;
+  string http_method = 6;
+  int32 sampling_count = 7;
+  string connectivity = 8;
+}
+
+message Config {
+  repeated ObserverConfig observers = 1;
+}

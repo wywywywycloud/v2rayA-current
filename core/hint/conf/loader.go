@@ -403,6 +403,7 @@ func injectBurstObservatoryAsMulti(coreConfig *xray_core.Config, burst *burstObs
 	if burst.PingConfig != nil {
 		observer.ProbeUrl = burst.PingConfig.Destination
 		observer.ProbeInterval = int64(burst.PingConfig.Interval)
+		applyAdditionalPingConfig(observer, burst.PingConfig)
 	}
 	cfg := &multiobs.Config{Observers: []*multiobs.ObserverConfig{observer}}
 	coreConfig.App = append(coreConfig.App, serial.ToTypedMessage(cfg))
@@ -452,11 +453,37 @@ func normalizeObserverConfig(e multiObsEntryJSON) *multiobs.ObserverConfig {
 		return nil
 	}
 
-	return &multiobs.ObserverConfig{
+	observer := &multiobs.ObserverConfig{
 		Tag:             e.Tag,
 		ProbeUrl:        probeURL,
 		ProbeInterval:   int64(probeInterval),
 		SubjectSelector: subjectSelector,
+	}
+	if e.Settings != nil {
+		applyAdditionalPingConfig(observer, e.Settings.PingConfig)
+	}
+	if e.Burst != nil {
+		applyAdditionalPingConfig(observer, e.Burst.PingConfig)
+	}
+	return observer
+}
+
+// Match the existing first-nonzero precedence of destination and interval.
+func applyAdditionalPingConfig(observer *multiobs.ObserverConfig, ping *pingConfigJSON) {
+	if ping == nil {
+		return
+	}
+	if observer.Timeout == 0 {
+		observer.Timeout = int64(ping.Timeout)
+	}
+	if observer.HttpMethod == "" {
+		observer.HttpMethod = ping.HTTPMethod
+	}
+	if observer.SamplingCount == 0 {
+		observer.SamplingCount = int32(ping.SamplingCount)
+	}
+	if observer.Connectivity == "" {
+		observer.Connectivity = ping.Connectivity
 	}
 }
 
@@ -541,8 +568,9 @@ func loadAndExtend(arg string) (*xray_conf.Config, *extendedJSON, *customConfig,
 		return nil, nil, nil, errors.New("failed to decode config: ", arg).Base(err)
 	}
 	ext := &extendedJSON{}
-	// Ignore JSON errors here — unknown fields in extendedJSON are fine.
-	_ = json.Unmarshal(raw, ext)
+	if err := json.Unmarshal(raw, ext); err != nil {
+		return nil, nil, nil, errors.New("invalid observatory config").Base(err)
+	}
 	return c, ext, customs, nil
 }
 
@@ -583,7 +611,9 @@ func buildConfigFromFiles(files []*xray_core.ConfigSource) (*xray_core.Config, e
 		}
 
 		e := &extendedJSON{}
-		_ = json.Unmarshal(raw, e)
+		if err := json.Unmarshal(raw, e); err != nil {
+			return nil, errors.New("invalid observatory config").Base(err)
+		}
 		if e.MultiObservatory != nil || e.BurstObservatory != nil {
 			ext = e
 		}
@@ -669,7 +699,9 @@ func init() {
 					return nil, errors.New("failed to decode JSON config").Base(err)
 				}
 				e := &extendedJSON{}
-				_ = json.Unmarshal(raw, e)
+				if err := json.Unmarshal(raw, e); err != nil {
+					return nil, errors.New("invalid observatory config").Base(err)
+				}
 				coreConfig, err := c.Build()
 				if err != nil {
 					return nil, err
