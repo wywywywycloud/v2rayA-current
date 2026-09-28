@@ -87,5 +87,7 @@ replace anytls v0.0.12 => github.com/anytls/anytls-go v0.0.12
 
 replace github.com/daeuniverse/outbound => github.com/olicesx/outbound v0.0.0-sticky-ip.0.20260917223728-6a44445c9106
 
-// Pin the Resilient source fork; update this revision explicitly after testing.
-replace github.com/xtls/xray-core => github.com/wywywywycloud/Xray-core v1.260327.1-0.20260728075948-5ca6f4b7d4dc
+// Local integration layout; source hashes are recorded in integration-lab manifests.
+replace github.com/xtls/xray-core => ../../xray-candidate
+
+replace golang.org/x/net => ../../net-candidate
