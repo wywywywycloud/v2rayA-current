@@ -13,10 +13,8 @@ opkg print-architecture | awk '$2 == "aarch64_cortex-a53" {found=1} END {exit !f
     echo 'Requires aarch64_cortex-a53; do not override your router architecture.' >&2; exit 1;
 }
 feed_url='https://raw.githubusercontent.com/wywywywycloud/v2rayA-current/openwrt-feed/openwrt-24.10/resilient/aarch64_cortex-a53'
-# TODO: after pushing resilient-key.pub, replace <NEW_COMMIT> with the immutable
-# publication commit and re-push this script, to avoid negative CDN caching.
-# Example: https://raw.githubusercontent.com/wywywywycloud/v2rayA-current/<NEW_COMMIT>/resilient-key.pub
-key_url='https://raw.githubusercontent.com/wywywywycloud/v2rayA-current/openwrt-feed/resilient-key.pub'
+# Pin the key to the immutable publication commit to avoid negative CDN caching.
+key_url='https://raw.githubusercontent.com/wywywywycloud/v2rayA-current/27fb3a9a7d781d6fe0c7d60a6ffff2113d6ec19b/resilient-key.pub'
 key_sha256='0f4cd283f4885d7c32b13c4a2451e6acb9101d0b2324256bc3dad043a81edc9d'
 key_id='1c624cadb7ee79e7'
 old_key_id='9478c50315c92021'
