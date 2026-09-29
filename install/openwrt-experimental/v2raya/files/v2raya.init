@@ -58,7 +58,13 @@ start_service() {
 
 	procd_set_param limits core="unlimited"
 	procd_set_param limits nofile="1000000 1000000"
-	procd_set_param respawn
+	# 256 MiB routers OOM-kill v2raya/core under load. Bare "respawn"
+	# defaults to 5 retries, then procd parks the service in a crash loop
+	# ("in a crash loop 6 crashes") with no proxy until manual start.
+	# Retry indefinitely with a 15s pause so OOM pressure can settle and
+	# the service recovers on its own; in-process core recovery already
+	# backs off 10s/30s/60s before giving up.
+	procd_set_param respawn 3600 15 0
 	procd_set_param stdout 1
 	procd_set_param stderr 1
 

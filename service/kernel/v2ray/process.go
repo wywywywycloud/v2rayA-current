@@ -262,6 +262,8 @@ func RunWithLog(ctx context.Context, name string, argv []string, dir string, env
 	cmd.Stdout = logWriter
 	cmd.Stderr = logWriter
 	cmd.WaitDelay = 2 * time.Second
+	// Die with the parent on OOM SIGKILL; kill the whole group on cancel.
+	ConfigureChildDeathSig(cmd)
 	err := cmd.Start()
 	if err != nil {
 		return nil, err

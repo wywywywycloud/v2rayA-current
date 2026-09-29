@@ -40,6 +40,9 @@ type CoreProcessManager struct {
 
 var ProcessManager CoreProcessManager
 
+// coreRecoveryDelays is a var for tests to shorten the backoff.
+var coreRecoveryDelays = []time.Duration{10 * time.Second, 30 * time.Second, 60 * time.Second}
+
 func (m *CoreProcessManager) beforeStop(p *Process) {
 	hostMu.Lock()
 	if !m.retainingInterception.Load() {
@@ -326,6 +329,48 @@ func (m *CoreProcessManager) handleUnexpectedStop(p *Process) {
 	// Override the default status (Stop() would have saved "running" or "stopped")
 	// to record the abnormal exit so the startup code can warn the user.
 	_ = configure.SetLastKernelExitStatus(configure.LastKernelExitCrashed)
+	// A dead core with a live API leaves the router without proxy until
+	// someone presses start. Schedule a bounded recovery: a few delayed
+	// restarts, then give up for manual inspection instead of OOM-looping.
+	// Only the production manager recovers; test instances stay synchronous.
+	if m == &ProcessManager {
+		generation := m.generation
+		go m.recoverCrashedCore(generation)
+	}
+}
+
+// recoverCrashedCore retries the last running config with backoff. It stops
+// at the first success, at a manual Start/Stop (generation or p changed),
+// at shutdown, or after the delays run out. Delays give an OOMed 256 MiB
+// router time to reclaim memory instead of crash-looping into procd lockout.
+func (m *CoreProcessManager) recoverCrashedCore(generation uint64) {
+	for _, delay := range coreRecoveryDelays {
+		time.Sleep(delay)
+		if m.shuttingDown.Load() {
+			return
+		}
+		m.mu.Lock()
+		// Someone already restarted or stopped explicitly.
+		if m.generation != generation || m.p != nil {
+			m.mu.Unlock()
+			return
+		}
+		m.mu.Unlock()
+		log.Warn("v2ray-core exited unexpectedly; attempting recovery")
+		if err := UpdateV2RayConfig(); err != nil {
+			if errors.Is(err, NoConnectedServerErr) {
+				// Nothing selected: staying stopped is correct, not a crash.
+				return
+			}
+			log.Warn("core recovery attempt failed: %v", err)
+			continue
+		}
+		if m.Running() {
+			log.Info("v2ray-core recovery succeeded")
+			return
+		}
+	}
+	log.Warn("v2ray-core recovery gave up after retries; manual start required")
 }
 
 // runPreStartHook executes the configured core pre-start hook.

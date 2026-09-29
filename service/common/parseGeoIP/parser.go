@@ -24,7 +24,18 @@ type parserCacheKey struct {
 	countryCode string
 }
 
-var parserCache sync.Map
+var (
+	parserCache sync.Map
+	// Serialize asset reads: a 22 MiB geoip.dat parsed concurrently from
+	// several goroutines multiplies peak RSS on a 256 MiB router with no
+	// swap. Cache hits stay lock-free; only misses take this mutex.
+	parserMu sync.Mutex
+)
+
+// maxParserCacheEntries bounds stale geoip.dat generations kept after
+// updates. Keys include size+modTime, so every update would otherwise leak
+// the previous parsed country lists.
+const maxParserCacheEntries = 8
 
 func Parser(filename string, countryCode string) ([]string, []string, error) {
 	realpath, err := asset.GetV2rayLocationAsset(filename)
@@ -47,6 +58,14 @@ func Parser(filename string, countryCode string) ([]string, []string, error) {
 		return result.ipv4, result.ipv6, nil
 	}
 
+	parserMu.Lock()
+	defer parserMu.Unlock()
+	// Re-check under the mutex: a concurrent miss may have filled it.
+	if cached, ok := parserCache.Load(cacheKey); ok {
+		result := cached.(parserResult)
+		return result.ipv4, result.ipv6, nil
+	}
+
 	data, err := os.ReadFile(realpath)
 	if err != nil {
 		return nil, nil, err
@@ -57,8 +76,38 @@ func Parser(filename string, countryCode string) ([]string, []string, error) {
 		return ipv4List, ipv6List, err
 	}
 
+	evictStaleParserEntries(cacheKey)
 	parserCache.Store(cacheKey, parserResult{ipv4: ipv4List, ipv6: ipv6List})
 	return ipv4List, ipv6List, nil
+}
+
+// evictStaleParserEntries drops previous generations of the same
+// path+country and caps total entries so updates cannot accumulate.
+func evictStaleParserEntries(keep parserCacheKey) {
+	count := 0
+	parserCache.Range(func(key, _ interface{}) bool {
+		count++
+		k, ok := key.(parserCacheKey)
+		if !ok {
+			return true
+		}
+		if k.path == keep.path && k.countryCode == keep.countryCode && k != keep {
+			parserCache.Delete(key)
+			count--
+		}
+		return true
+	})
+	if count < maxParserCacheEntries {
+		return
+	}
+	// Overfull (many countries/paths): drop everything but the fresh key.
+	// Next misses re-parse on demand; steady state stays small.
+	parserCache.Range(func(key, _ interface{}) bool {
+		if k, ok := key.(parserCacheKey); !ok || k != keep {
+			parserCache.Delete(key)
+		}
+		return true
+	})
 }
 
 func parseGeoIP(data []byte, countryCode string) ([]string, []string, error) {

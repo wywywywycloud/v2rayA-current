@@ -48,6 +48,12 @@ func recoverPendingHostState() {
 
 func run() error {
 	recoverPendingHostState()
+	// OOM-killed runs leave probe cores reparented to init, and their
+	// /tmp configs behind (deferred removes never run on SIGKILL; /tmp is
+	// tmpfs, so each leak eats shmem on a 256 MiB box). Reap both before
+	// starting new ones under the single-slot limiter.
+	v2ray.CleanupStaleProbeCores()
+	v2ray.CleanupStaleProbeTempFiles()
 	stopAutomation := func() {}
 	setting := configure.GetSettingNotNil()
 	if configure.MigrateOpenWrtBridgeExclusion(setting, common.IsOpenWrt()) {
@@ -71,9 +77,10 @@ func run() error {
 	switch lastExit {
 	case configure.LastKernelExitCrashed:
 		log.Warn("v2ray-core exited abnormally the last time; check the logs for details")
-		// Even if the kernel crashed, the running flag was set to false by
-		// handleUnexpectedStop, so shouldStart will be false. We do NOT attempt
-		// to auto-start after a crash to give the user a chance to inspect.
+		// In-process recovery (handleUnexpectedStop) already retried with
+		// backoff while the API stayed up. If it gave up, running is false
+		// and we stay stopped here so the user can inspect instead of
+		// OOM-looping across procd restarts.
 		if shouldStart {
 			// This shouldn't normally happen if handleUnexpectedStop correctly
 			// cleared the flag, but be defensive.

@@ -48,9 +48,14 @@ func SetLogFile(logWay string, logFile string, maxdays int64, disableLogColor bo
 		params = string(b)
 		Log.SetLogger("console", params)
 	} else {
+		// maxsize caps a single log file: beego's default is 256 MiB,
+		// which alone can OOM a 256 MiB OpenWrt box when the log lives
+		// on tmpfs (/var/log -> /tmp). 5 MiB with day rotation keeps
+		// enough context for debugging while bounding shmem usage.
 		b, _ := jsoniter.Marshal(map[string]interface{}{
 			"filename": logFile,
 			"maxdays":  maxdays,
+			"maxsize":  5 * 1024 * 1024,
 		})
 		params := string(b)
 		Log.SetLogger("file", params)

@@ -128,6 +128,10 @@ func probeSubscriptionServerMeasurementWithContext(parent context.Context, serve
 	defer cancel()
 	cmd := exec.CommandContext(ctx, bin, "run", "--config="+file.Name())
 	cmd.Env = append(os.Environ(), "XRAY_LOCATION_ASSET="+asset.GetV2rayLocationAssetOverride(), "V2RAY_CONF_GEOLOADER=memconservative")
+	// Orphaned probe cores survived OOM kills and piled up (~17 MiB for
+	// 3 in the field log). Pdeathsig kills them with v2raya; group-cancel
+	// reaps grandchildren on normal timeouts.
+	v2ray.ConfigureChildDeathSig(cmd)
 	listener.Close()
 	if err = cmd.Start(); err != nil {
 		return subscriptionProbeResult{err: err}
