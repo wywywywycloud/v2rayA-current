@@ -1,6 +1,6 @@
 x-Ray VPN experimental
-Version: 2026.09.28-experimental.1
-Application source: 002c144fef9be4aeee4716adb2f8d2913d04d6ca
-The three application IPKs are byte-identical to GitHub release experimental-2026.09.28.1.
+Version: 2026.09.29-experimental.1
+Application source: b51db60a6654b50372bfe6d4f3d63a204b928fc5
+The three application IPKs are byte-identical to GitHub release experimental-2026.09.29.1.
 xray-proxy-client-experimental is a data-free metapackage with exact version dependencies.
 System dependencies are supplied by the device official OpenWrt repositories.

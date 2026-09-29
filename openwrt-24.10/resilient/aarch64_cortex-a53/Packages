@@ -1,23 +1,5 @@
-Package: luci-app-v2raya-resilient
-Version: 2026.09.28-experimental.1
-Architecture: aarch64_cortex-a53
-Provides: luci-app-v2raya, luci-app-v2raya-levin
-Conflicts: luci-app-v2raya, luci-app-v2raya-levin
-Replaces: luci-app-v2raya, luci-app-v2raya-levin
-License: Apache-2.0
-Source: https://github.com/wywywywycloud/v2rayA-resilient/tree/experimental
-Maintainer: wywywywycloud
-Section: net
-Priority: optional
-Depends: luci-light, v2raya-resilient (= 2026.09.28-experimental.1)
-Installed-Size: 5665
-Description: x-Ray VPN - complete experimental application with LuCI
-Filename: luci-app-v2raya-resilient_2026.09.28-experimental.1_aarch64_cortex-a53.ipk
-Size: 3207
-SHA256sum: 20eba884e8381049fa6edf5e32cdf5c7f15e94780401dc3053f20bae21fd2e5b
-
 Package: v2raya-resilient-core
-Version: 2026.09.28-experimental.1
+Version: 2026.09.29-experimental.1
 Architecture: aarch64_cortex-a53
 Provides: v2raya-core, v2raya-levin-core
 Conflicts: v2raya-core, v2raya-levin-core
@@ -30,12 +12,12 @@ Priority: optional
 Depends: libc
 Installed-Size: 35324066
 Description: Matching proxy core for x-Ray VPN
-Filename: v2raya-resilient-core_2026.09.28-experimental.1_aarch64_cortex-a53.ipk
-Size: 12513711
-SHA256sum: 2e468fae3a0d090355c7e9ed06ba237085457dd4205e38ebeadeb3b067c47330
+Filename: v2raya-resilient-core_2026.09.29-experimental.1_aarch64_cortex-a53.ipk
+Size: 12501802
+SHA256sum: b5227792b1685dc7c10f5e29f77f66d187b7b5684d3b5fc88bcb0143f9f35968
 
 Package: v2raya-resilient
-Version: 2026.09.28-experimental.1
+Version: 2026.09.29-experimental.1
 Architecture: aarch64_cortex-a53
 Provides: v2raya, v2raya-levin
 Conflicts: v2raya, v2raya-levin
@@ -45,24 +27,43 @@ Source: https://github.com/wywywywycloud/v2rayA-resilient/tree/experimental
 Maintainer: wywywywycloud
 Section: net
 Priority: optional
-Depends: libc, ca-bundle, kmod-nft-tproxy, v2raya-resilient-core (= 2026.09.28-experimental.1), v2ray-geoip, v2ray-geosite
-Installed-Size: 27660527
+Depends: libc, ca-bundle, kmod-nft-tproxy, v2raya-resilient-core (= 2026.09.29-experimental.1), v2ray-geoip, v2ray-geosite
+Installed-Size: 27791996
 Description: x-Ray VPN experimental service with Xray-based proxy groups
-Filename: v2raya-resilient_2026.09.28-experimental.1_aarch64_cortex-a53.ipk
-Size: 10199292
-SHA256sum: 38c29e1668b40629a7f5402885219b10f80916eb19e7b9589c516d241d134e5d
+Filename: v2raya-resilient_2026.09.29-experimental.1_aarch64_cortex-a53.ipk
+Size: 10190637
+SHA256sum: 92856cd1745ec4501f84376892ee524a82167e837d4c3b10f61d812083bbab50
+
+Package: luci-app-v2raya-resilient
+Version: 2026.09.29-experimental.1
+Architecture: aarch64_cortex-a53
+Provides: luci-app-v2raya, luci-app-v2raya-levin
+Conflicts: luci-app-v2raya, luci-app-v2raya-levin
+Replaces: luci-app-v2raya, luci-app-v2raya-levin
+License: Apache-2.0
+Source: https://github.com/wywywywycloud/v2rayA-resilient/tree/experimental
+Maintainer: wywywywycloud
+Section: net
+Priority: optional
+Depends: luci-light, v2raya-resilient (= 2026.09.29-experimental.1)
+Installed-Size: 5665
+Description: x-Ray VPN - complete experimental application with LuCI
+Filename: luci-app-v2raya-resilient_2026.09.29-experimental.1_aarch64_cortex-a53.ipk
+Size: 3214
+SHA256sum: 497a1320e0156b37652368332a5a9f2a7c1d2fae2bf1d8174c73c3e25a826e00
+
 
 Package: xray-proxy-client-experimental
-Version: 2026.09.28-experimental.1
+Version: 2026.09.29-experimental.1
 Architecture: aarch64_cortex-a53
 License: AGPL-3.0-only
 Maintainer: wywywywycloud
 Section: net
 Priority: optional
 Installed-Size: 0
-Depends: luci-app-v2raya-resilient (= 2026.09.28-experimental.1), v2raya-resilient (= 2026.09.28-experimental.1), v2raya-resilient-core (= 2026.09.28-experimental.1)
+Depends: luci-app-v2raya-resilient (= 2026.09.29-experimental.1), v2raya-resilient (= 2026.09.29-experimental.1), v2raya-resilient-core (= 2026.09.29-experimental.1)
 Description: x-Ray VPN experimental - installs matching service, core and LuCI with dependencies; replaces the existing Resilient application
-Filename: xray-proxy-client-experimental_2026.09.28-experimental.1_aarch64_cortex-a53.ipk
-Size: 608
-SHA256sum: 3402a1be9ca8b5be3f502758e041f55268293f1620d5b5f46b414b50689605db
+Filename: xray-proxy-client-experimental_2026.09.29-experimental.1_aarch64_cortex-a53.ipk
+Size: 606
+SHA256sum: 19ceabab400c3aaa17d9767fbe5f43e15e3000adf08c0a5497d34d706b1c3dae
 

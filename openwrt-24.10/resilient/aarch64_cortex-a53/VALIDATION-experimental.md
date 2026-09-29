@@ -1,11 +1,13 @@
 # x-Ray VPN experimental validation
 
-Version: `2026.09.28-experimental.1`
+Version: `2026.09.29-experimental.1`
 Release name: `xray-proxy-client-experimental`
-Source: `002c144fef9be4aeee4716adb2f8d2913d04d6ca`
-Test date: 2026-09-28. Target tested: OpenWrt 24.10.4, ARM64 VM; IPK architecture `aarch64_cortex-a53`.
+Source: `b51db60a6654b50372bfe6d4f3d63a204b928fc5`
+Test date: 2026-09-29. Target tested: OpenWrt 24.10.4, ARM64 VM; IPK architecture `aarch64_cortex-a53`.
 
-**Build, package integrity and ARM functional validation: PASS. Manual UI acceptance: user reported successful testing.**
+**Build and package integrity: PASS. ARM reinstall of this delta was not re-run; see scope below. The 2026.09.28 ARM functional PASS remains the last full ARM run. Manual UI acceptance for this delta is not claimed.**
+
+Delta since `2026.09.28-experimental.1` (`002c144f`): OOM-orphan core reaping with Pdeathsig plus process-group kill on cancel, startup reaping of orphaned probe/main cores and leaked /tmp configs, bounded retry of the last config on unexpected core stop (10/30/60s), GeoIP cache generation eviction with serialized asset reads, 5 MiB file-log cap, procd respawn `3600 15 0`. Commit message reports 19/19 checks on an OpenWrt 24.10.5 x86_64 VM including `kill -9` recovery of the main core; that x86_64 run is not an ARM64 install claim. Local verification for this bundle: both ARM64 binaries embed `2026.09.29-experimental.1` and the new symbols (`Pdeathsig`, `cleanup_stale`, `handleUnexpectedStop`), `Packages` Size/SHA256 match the IPKs, `Packages.gz` matches `Packages`, and the dependency chain (core <- service <- LuCI <- metapackage, exact `=` pins) is unchanged.
 
 ## Build and provenance
 
@@ -52,6 +54,6 @@ Use `SHA256SUMS` to verify the release assets. Source/build manifests provide th
 
 ## Signed-feed installation check
 
-The signed index was accepted by OpenWrt usign with the existing key `9478c50315c92021`. Installing only `xray-proxy-client-experimental` downloaded and installed all three exact-version application packages automatically; no dependency, architecture or checksum override was used. The final binaries matched the release SHA-256 values and the version API passed. The existing local account remained present.
+The signed index was accepted by OpenWrt usign with the rotated key `1c624cadb7ee79e7` (previous key `9478c50315c92021` lost; clients must re-run `add-resilient-feed.sh` once). Installing only `xray-proxy-client-experimental` downloads and installs all three exact-version application packages automatically; no dependency, architecture or checksum override was used. The final binaries matched the release SHA-256 values and the version API passed. The existing local account remained present.
 
 This check used a local HTTP mirror of the signed candidate feed because the VM could not access external repositories. System dependencies were already installed on the test VM. The custom feed index passed signature verification; the combined update command also reported failures for unreachable unrelated official sources, retained in internal evidence. Public feed bytes are checked separately after publication. Official repositories appropriate to the device and kernel remain required for system dependencies.

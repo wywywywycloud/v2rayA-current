@@ -1,6 +1,6 @@
 # x-Ray VPN experimental
 
-Install **xray-proxy-client-experimental** from this signed feed. The metapackage pulls the exact matching service, core and LuCI version `2026.09.28-experimental.1`, plus their declared dependencies from your official OpenWrt repositories.
+Install **xray-proxy-client-experimental** from this signed feed. The metapackage pulls the exact matching service, core and LuCI version `2026.09.29-experimental.1`, plus their declared dependencies from your official OpenWrt repositories.
 
 If this Resilient feed is already configured, click **System > Software > Update lists**, then search for **xray-proxy-client-experimental** and install it. From SSH:
 
@@ -9,11 +9,11 @@ opkg update
 opkg install xray-proxy-client-experimental
 ```
 
-For a new feed setup, run the existing `add-resilient-feed.sh`; the feed URL and signing key remain unchanged. Keep your device's official repositories enabled. Kernel modules must come from the repository matching your installed kernel; never force dependency or architecture checks.
+For a new feed setup, run the existing `add-resilient-feed.sh`; the feed URL remains unchanged. The signing key was rotated on 2026-09-29 (old `9478c50315c92021` lost, new `1c624cadb7ee79e7`): existing installations must re-run the script once before `opkg update`. Keep your device's official repositories enabled. Kernel modules must come from the repository matching your installed kernel; never force dependency or architecture checks.
 
 This replaces the existing Resilient application using its compatible package names and configuration paths. It is not a parallel installation. Since these same package names now point to the newer experimental version, they also appear as updates for installed Resilient packages. Back up your configuration before updating.
 
-The release was tested on OpenWrt 24.10.4 ARM64 (`aarch64_cortex-a53`). No new nine-version or physical-router test is claimed. Existing package files remain available for rollback. The complete dependency chain and validation are in [the experimental release](https://github.com/wywywywycloud/v2raya-openwrt-current/releases/tag/experimental-2026.09.28.1).
+The release was tested on OpenWrt 24.10.4 ARM64 (`aarch64_cortex-a53`). No new nine-version or physical-router test is claimed. Existing package files remain available for rollback. The complete dependency chain and validation are in [the experimental release](https://github.com/wywywywycloud/v2raya-openwrt-current/releases/tag/experimental-2026.09.29.1).
 
 ---
 # v2rayA Resilient for OpenWrt 24.10
@@ -74,12 +74,16 @@ change its settings. It replaces this project's previous feed entries and keeps
 all other sources. The previous source configuration is saved as
 `/etc/opkg/customfeeds.conf.before-resilient` when changed.
 
-Public key fingerprint: `9478c50315c92021`.
-Public key SHA256: `7a5f9426bdbacd25d1e89ad7e5e65579b2c33bcd278b0489772f3ab017df8787`.
+Public key fingerprint: `1c624cadb7ee79e7`.
+Public key SHA256: `0f4cd283f4885d7c32b13c4a2451e6acb9101d0b2324256bc3dad043a81edc9d`.
 
 Release r11 rotates the Resilient feed key. Existing installations must run
 the setup command above once before `opkg update`; package settings and the
 installed service are not changed by the setup script.
+
+On 2026-09-29 the key was rotated again (old `9478c50315c92021` lost, new
+`1c624cadb7ee79e7`). Existing installations must re-run the setup command
+once before `opkg update`.
 
 The source line, also visible under Software > Configure opkg, is:
 
